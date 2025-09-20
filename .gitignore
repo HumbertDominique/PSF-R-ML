@@ -1,0 +1,17 @@
+# Pycache and compiled python files.
+__pycache__/
+*py[cod]
+
+# Juyter notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+**/*.ipynb_checkpoints/
+#Egg info files produced by pip installation
+*egg-info
+
+#virtual environment
+venv
+.venv
+
+#data file
+outputs
