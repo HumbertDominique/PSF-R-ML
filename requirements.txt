@@ -1,0 +1,5 @@
+ipympl
+h5py
+numpy
+ipykernel
+pandas
