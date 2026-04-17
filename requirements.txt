@@ -1,4 +1,4 @@
-ipympl
+ipykernelipympl
 h5py
 numpy
 ipykernel
