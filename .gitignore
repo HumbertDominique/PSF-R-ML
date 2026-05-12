@@ -14,5 +14,4 @@ venv
 .venv
 
 #data file
-outputs
-dataInputs
+**/*.h5

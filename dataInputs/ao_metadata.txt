@@ -1,0 +1,17 @@
+Row	values
+D	0.0175
+r0	0.00375
+L0	30
+Asl	0.02
+wind	0.04
+windDir	3.14159292035398
+Exposure time	10100
+nIteration	10200
+gain_cl	0.5
+batchItSize	27434
+nBatch	1
+LastBatchItSize	10200
+oversampling	1
+nActWSF	10
+edge_act	0.5
+startDelay	100
