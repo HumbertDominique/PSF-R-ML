@@ -12,8 +12,6 @@ __pycache__/
 #virtual environment
 venv
 .venv
-dataInputs/*
-output_prep/*
-output_ML/*
+
 #data file
 **/*.h5
