@@ -5,6 +5,7 @@ This file is a almost a copy-paste form my 2026 PA "Astronomical Adaptive Optics
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 # Define the Dice coefficient metric for evaluating segmentation performance
 def dice_coef(y_true, y_pred):
@@ -150,3 +151,36 @@ class UNet(nn.Module):
 def build_unet(input_shape=(128, 128, 2), n_channels_out=1, bilinear=True):
     model = UNet(input_shape=input_shape, n_channels_out=n_channels_out, bilinear=bilinear)
     return model
+
+
+def pixel_adder(data, scale_factor = [1,1], final_shape = None):
+    """
+    Generates a phase screen base on a Phase Spectrum Density (PSD)
+    Parameters:
+        data (ndarray): source data
+        scale_factor (floar): scalling factor. Can be > or < o
+        final_shape (ndarray): Option to input directly the desired shape. final_shape/data.shape must be an integer or the final shape will be data.shape*(final_shape//data.shape).
+    Returns (list):
+        D_phi (ndarray): 2D array representing the phase structure
+    TODO: Error check
+    """
+
+    datashape = data.shape
+
+    if final_shape == None:
+        iscale = scale_factor[0]
+        jscale = scale_factor[1]
+        image_scaled = np.zeros((int(scale_factor[0]*datashape[0]), int(scale_factor[1]*datashape[1])))
+    else:
+        iscale = int(final_shape[0]/datashape[0])
+        jscale = int(final_shape[1]/datashape[1])
+        image_scaled = np.zeros((int(final_shape[0]), int(final_shape[1])))
+        
+    for i in range(0, datashape[0]):
+        for j in range(0, datashape[1]):
+            iscaled = i*iscale
+            jscaled = j*jscale
+            image_scaled[int(iscaled):int(iscaled+iscale), int(jscaled):int(jscaled+jscale)] = data[i,j]
+            # print(data[i,j])
+
+    return image_scaled

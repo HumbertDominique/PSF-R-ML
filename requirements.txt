@@ -41,3 +41,6 @@ traitlets==5.14.3
 tzdata==2026.1
 wcwidth==0.6.0
 widgetsnbextension==4.0.15
+keras
+scikit-learn
+tqdm
