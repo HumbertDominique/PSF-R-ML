@@ -46,37 +46,6 @@ print(torch.__version__)
 # print(keras.__version__)
 print(torch.cuda.is_available())
 
-def pixel_adder(data, scale_factor = [1,1], final_shape = None):
-    """
-    Generates a phase screen base on a Phase Spectrum Density (PSD)
-    Parameters:
-        data (ndarray): source data
-        scale_factor (floar): scalling factor. Can be > or < o
-        final_shape (ndarray): Option to input directly the desired shape. final_shape/data.shape must be an integer or the final shape will be data.shape*(final_shape//data.shape).
-    Returns (list):
-        D_phi (ndarray): 2D array representing the phase structure
-    TODO: Error check
-    """
-
-    datashape = data.shape
-
-    if final_shape == None:
-        iscale = scale_factor[0]
-        jscale = scale_factor[1]
-        image_scaled = np.zeros((int(scale_factor[0]*datashape[0]), int(scale_factor[1]*datashape[1])))
-    else:
-        iscale = int(final_shape[0]/datashape[0])
-        jscale = int(final_shape[1]/datashape[1])
-        image_scaled = np.zeros((int(final_shape[0]), int(final_shape[1])))
-        
-    for i in range(0, datashape[0]):
-        for j in range(0, datashape[1]):
-            iscaled = i*iscale
-            jscaled = j*jscale
-            image_scaled[int(iscaled):int(iscaled+iscale), int(jscaled):int(jscaled+jscale)] = data[i,j]
-            # print(data[i,j])
-
-    return image_scaled
 
 print("------------- Loading data -------------")
 # TODO: make size dynamic
@@ -98,13 +67,13 @@ with h5py.File(inputDir+"ao_psf_train_1.h5", 'r') as temp:
     tempData = temp[key[0]][()][:]
     y_train = np.zeros((tempData.shape[0], 270, 270))
     for i in range(tempData.shape[0]):
-        y_train[i] = pixel_adder(tempData[i], final_shape=[270, 270])
+        y_train[i] = unet.pixel_adder(tempData[i], final_shape=[270, 270])
 with h5py.File(inputDir+"ao_psf_val_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     y_val = np.zeros((tempData.shape[0], 270, 270))
     for i in range(tempData.shape[0]):
-        y_val[i] = pixel_adder(tempData[i], final_shape=[270, 270])
+        y_val[i] = unet.pixel_adder(tempData[i], final_shape=[270, 270])
 
 print(f"y_train shape: {y_train.shape}")
 print(f"y_val shape: {y_val.shape}")

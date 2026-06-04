@@ -172,8 +172,8 @@ def pixel_adder(data, scale_factor = [1,1], final_shape = None):
         jscale = scale_factor[1]
         image_scaled = np.zeros((int(scale_factor[0]*datashape[0]), int(scale_factor[1]*datashape[1])))
     else:
-        iscale = int(final_shape[0]/datashape[0])
-        jscale = int(final_shape[1]/datashape[1])
+        iscale = final_shape[0]/datashape[0]
+        jscale = final_shape[1]/datashape[1]
         image_scaled = np.zeros((int(final_shape[0]), int(final_shape[1])))
         
     for i in range(0, datashape[0]):
