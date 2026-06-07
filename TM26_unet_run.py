@@ -15,6 +15,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import roc_auc_score
 
 import TM26_unet as unet
+import myfunctions
 
 from tqdm.auto import tqdm  # tqdm: merci Jonathan!
 
@@ -67,13 +68,13 @@ with h5py.File(inputDir+"ao_psf_train_1.h5", 'r') as temp:
     tempData = temp[key[0]][()][:]
     y_train = np.zeros((tempData.shape[0], 270, 270))
     for i in range(tempData.shape[0]):
-        y_train[i] = unet.pixel_adder(tempData[i], final_shape=[270, 270])
+        y_train[i] = myfunctions.pixel_adder(tempData[i], final_shape=[270, 270])
 with h5py.File(inputDir+"ao_psf_val_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     y_val = np.zeros((tempData.shape[0], 270, 270))
     for i in range(tempData.shape[0]):
-        y_val[i] = unet.pixel_adder(tempData[i], final_shape=[270, 270])
+        y_val[i] = myfunctions.pixel_adder(tempData[i], final_shape=[270, 270])
 
 print(f"y_train shape: {y_train.shape}")
 print(f"y_val shape: {y_val.shape}")
