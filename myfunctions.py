@@ -76,4 +76,4 @@ def circle_to_square(positions_1d, Nact1D=11):
     sorted_indices = np.argsort(dist_sq.flatten())
     active_indices = sorted_indices[:len(positions_1d)]
     dm_array.flat[active_indices] = positions_1d
-    return dm_arra
+    return dm_array
