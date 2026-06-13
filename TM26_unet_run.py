@@ -27,8 +27,6 @@ history_path = outputDir + "/history.h5"
 
 stabilisation_delay = 100
 
-rng_SEED = 42
-
 num_epochs = 5
 early_stopping_patience = 15
 best_val_loss = np.inf
@@ -50,7 +48,7 @@ print(torch.cuda.is_available())
 
 print("------------- Loading data -------------")
 # TODO: make size dynamic
-image_size = (270, 270)
+# image_size = (270, 270)
 
 
 with h5py.File(inputDir+"ao_lightfield_train_1.h5", 'r') as temp:
@@ -60,6 +58,7 @@ with h5py.File(inputDir+"ao_lightfield_val_1.h5", 'r') as temp:
     key = list(temp.keys())
     x_val = temp[key[0]][()][:]
 
+image_size = (x_train.shape[1], x_train.shape[2])
 print(f"x_train shape: {x_train.shape}")
 print(f"x_val shape: {x_val.shape}")
 
