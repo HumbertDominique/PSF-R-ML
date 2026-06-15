@@ -1,5 +1,6 @@
 import os
 os.environ["KERAS_BACKEND"] = "torch"
+
 import torch
 # import keras
 import h5py
@@ -25,10 +26,9 @@ outputDir = "output_ML/"
 inputDir = "output_prep/"
 history_path = outputDir + "/history.h5"
 
-stabilisation_delay = 100
 
-num_epochs = 5
-early_stopping_patience = 15
+num_epochs = 100
+early_stopping_patience = 20
 best_val_loss = np.inf
 epochs_no_improve = 0
 
@@ -40,7 +40,6 @@ MEDIUM_SIZE = 20
 BIGGER_SIZE = 25
 
 
-
 print(torch.__version__)
 # print(keras.__version__)
 print(torch.cuda.is_available())
@@ -48,27 +47,27 @@ print(torch.cuda.is_available())
 
 print("------------- Loading data -------------")
 # TODO: make size dynamic
-# image_size = (270, 270)
-
-
 with h5py.File(inputDir+"ao_lightfield_train_1.h5", 'r') as temp:
     key = list(temp.keys())
-    x_train = temp[key[0]][()][:]
+    # print(key)
+    x_train = temp[key[0]][()]
 with h5py.File(inputDir+"ao_lightfield_val_1.h5", 'r') as temp:
     key = list(temp.keys())
-    x_val = temp[key[0]][()][:]
+    x_val = temp[key[0]][()]
 
-image_size = (x_train.shape[1], x_train.shape[2])
+image_size = (x_train.shape[1], x_val.shape[2])
+print(image_size)
+
 print(f"x_train shape: {x_train.shape}")
 print(f"x_val shape: {x_val.shape}")
 
-with h5py.File(inputDir+"ao_psf_train_1.h5", 'r') as temp:
+with h5py.File(inputDir+"ao_ipsf_train_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     y_train = np.zeros((tempData.shape[0], 270, 270))
     for i in range(tempData.shape[0]):
         y_train[i] = myfunctions.pixel_adder(tempData[i], final_shape=[270, 270])
-with h5py.File(inputDir+"ao_psf_val_1.h5", 'r') as temp:
+with h5py.File(inputDir+"ao_ipsf_val_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     y_val = np.zeros((tempData.shape[0], 270, 270))
@@ -80,14 +79,14 @@ print(f"y_val shape: {y_val.shape}")
 
 plt.close(0)
 plt.figure(0)
-plt.imshow(y_train[0])
+plt.imshow(x_train[0])
+
+device = torch.device("cuda:0" if GPU and torch.cuda.is_available() else "cpu")
+model = unet.build_unet(input_shape=(*image_size, 1), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx and WFSy
 print("------------- Data Loaded -------------")
 
 
 print("------------- Setting up training -------------")
-device = torch.device("cuda:0" if GPU and torch.cuda.is_available() else "cpu")
-model = unet.build_unet(input_shape=(270,270, 1), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx and WFSy
-
 if torch.cuda.device_count() > 1 and MULTIGPU:
     model = torch.nn.DataParallel(model)
 
@@ -97,31 +96,62 @@ weight_path = outputDir+"{}_weights.best.pth".format("cxr_reg")
 
 # Convert numpy arrays to torch tensors
 # TODO: Evaluate pertinence of float32
-
-x_train_tens = torch.tensor(x_train, dtype=torch.float32).unsqueeze(1)
-x_val_tens = torch.tensor(x_val, dtype=torch.float32).unsqueeze(1)
-y_train_tens = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
-y_val_tens = torch.tensor(y_val, dtype=torch.float32).unsqueeze(1)
+x_train_tens = torch.tensor(x_train, dtype=torch.float32).unsqueeze(1)/x_train.max()
+x_val_tens = torch.tensor(x_val, dtype=torch.float32).unsqueeze(1)/x_train.max()
+y_train_tens = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)/y_train.max()
+y_val_tens = torch.tensor(y_val, dtype=torch.float32).unsqueeze(1)/y_train.max()
 
 print(f"x_train_tens shape {x_train_tens.shape}")
 print(f"y_train_tens shape {y_train_tens.shape}")
 print(f"x_val_tens shape {x_val_tens.shape}")
 print(f"y_val_tens shape {y_val_tens.shape}")
 
+with open(outputDir + "max_val.txt", "w") as f:
+    f.write(f"x_train.max(): {x_train.max()}\n")
+    f.write(f"y_train.max(): {y_train.max()}\n")
+
+print("------------- Data Loaded -------------")
+
+
 # Define batch size depending on device
-batch_size = 32 if device.type == "cuda" else 12
+batch_size = 64 if device.type == "cuda" else 12
 
 train_loader = DataLoader(TensorDataset(x_train_tens, y_train_tens), batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(TensorDataset(x_val_tens, y_val_tens), batch_size=batch_size, shuffle=False)
 
 for x_batch, y_batch in train_loader:
-    print("x_batch shape:", x_batch.shape)  # should be [batch_size, 2, 270, 270]
-    print("y_batch shape:", y_batch.shape)  # should be [batch_size, 1, 270, 270] or [batch_size, 270, 270]
+    print("x_batch shape:", x_batch.shape)  # should be [batch_size, 2, 80, 80]
+    print("y_batch shape:", y_batch.shape)  # should be [batch_size, 1, 80, 80] or [batch_size, 80, 80]
     break
 
 optimizer = SGD(model.parameters(), lr=0.001, momentum=0.9)
-scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.05, patience=3, cooldown=2, min_lr=1e-6)
+min_lr = 1e-7
+scheduler = ReduceLROnPlateau(
+    optimizer,
+    mode='min',          # val_loss should decrease
+    factor=0.1,          # reduce LR by 10x when stuck
+    patience=5,          # wait 5 epochs with no improvement
+    threshold=1e-6,      # minimum change to count as improvement
+    threshold_mode='rel',# relative threshold (default)
+    cooldown=0,          # no cooldown (fine for most cases)
+    min_lr=min_lr,      # lower bound on LR
+    eps=1e-8,            # minimal LR change (default)
+)
 criterion = unet.mse_loss
+
+with open(outputDir + "ML_setup.txt", "w") as f:
+    f.write(f"lr: {optimizer.param_groups[0]['lr']}\n")
+    f.write(f"momentum: {optimizer.param_groups[0]['momentum']}\n")
+    f.write(f"weight_decay: {optimizer.param_groups[0]['weight_decay']}\n")
+    f.write(f"mode: {scheduler.mode}\n")
+    f.write(f"factor: {scheduler.factor}\n")
+    f.write(f"patience: {scheduler.patience}\n")
+    f.write(f"threshold: {scheduler.threshold}\n")
+    f.write(f"threshold_mode: {scheduler.threshold_mode}\n")
+    f.write(f"cooldown: {scheduler.cooldown}\n")
+    f.write(f"min_lr: {min_lr}\n")
+    f.write(f"eps: {scheduler.eps}\n")
+
 
 def run_epoch(model, loader, optimizer=None, phase="Train", epoch=0, num_epochs=1):
     is_training = optimizer is not None
@@ -202,8 +232,8 @@ for epoch in range(num_epochs):
 
     history["loss"].append(train_loss)
     history["val_loss"].append(val_loss)
-    history["binary_accuracy"].append(train_acc)
-    history["val_binary_accuracy"].append(val_acc)
+    # history["binary_accuracy"].append(train_acc)      # useless
+    # history["val_binary_accuracy"].append(val_acc)    # useless
 
     print(
         f"Epoch {epoch + 1}/{num_epochs} - "
@@ -236,7 +266,6 @@ with h5py.File(history_path, "w") as f:
     for key, values in history.items():
         f.create_dataset(key, data=values)
 print(f"Saved history to {history_path}")
-
 
 print("------------- Cleaning up GPU memory -------------")
 del model
