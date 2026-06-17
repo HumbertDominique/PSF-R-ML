@@ -77,3 +77,15 @@ def circle_to_square(positions_1d, Nact1D=11):
     active_indices = sorted_indices[:len(positions_1d)]
     dm_array.flat[active_indices] = positions_1d
     return dm_array
+
+def eng_notation(value, decimals=1):
+    """Engineering notation with custom decimal places"""
+    if value == 0:
+        return "0"
+    
+    expo = int(np.floor(np.log10(abs(value))))
+    eng_expo = 3 * round(expo / 3)
+    coeff = value / (10 ** eng_expo)
+    
+    # Use f-string with dynamic decimals
+    return f"{coeff:.{decimals}f}e{eng_expo}"
