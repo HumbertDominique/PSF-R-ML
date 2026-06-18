@@ -89,3 +89,23 @@ def eng_notation(value, decimals=1):
     
     # Use f-string with dynamic decimals
     return f"{coeff:.{decimals}f}e{eng_expo}"
+
+def telescope_otf(nu_n, epsilon=None):
+   """
+   Computes a telescope's OTF
+   Parameters:
+       nu_n (ndarray): Normalized spatial/angular frequencies
+       epsilon (float): obtruation ratio
+   Returns (list):
+       otf_tsc (ndarray): real 2D array representing the telescope OTF.
+   TODO: Error check
+   TODO: Implement anular pupils
+   Based on "STEP-BY-STEP PROCEDURE FOR COMPUTING NUMERICALLY THE SEEING LIMITED POINT SPREAD FUNCTION FROM THE OPTICAL TURBULENCE PHASE STRUCTURE FUNCTION EQUATION" Laurent Jolissaint
+    From PA 2025
+
+   """
+   # Plain pupil case (no central obtruation)
+   otf_tsc = np.zeros_like(nu_n)
+   mask = nu_n <= 1
+   otf_tsc[mask] = (2/np.pi) * (np.arccos(nu_n[mask]) - nu_n[mask] * np.sqrt(1 - nu_n[mask]**2))
+   return otf_tsc
