@@ -109,3 +109,160 @@ def telescope_otf(nu_n, epsilon=None):
    mask = nu_n <= 1
    otf_tsc[mask] = (2/np.pi) * (np.arccos(nu_n[mask]) - nu_n[mask] * np.sqrt(1 - nu_n[mask]**2))
    return otf_tsc
+
+"""
+Module containing useful FFT based function and classes
+
+M. J. Townson, O. J. D. Farley, G. Orban de Xivry, J. Osborn, and A. P. Reeves, "AOtools: a Python package for adaptive optics modelling and analysis," Opt. Express 27, 31316-31329 (2019))
+"""
+def ft(data, delta):
+    """
+    A properly scaled 1-D FFT
+
+    Parameters:
+        data (ndarray): An array on which to perform the FFT
+        delta (float): Spacing between elements
+
+    Returns:
+        ndarray: scaled FFT
+    """
+    DATA = np.fft.fftshift(
+            np.fft.fft(
+                    np.fft.fftshift(data, axes=(-1))),
+            axes=(-1)) * delta
+    return DATA
+
+def ift(data, delta_f):
+    """
+    Scaled inverse 1-D FFT
+
+    Parameters:
+        data (ndarray): Data in Fourier Space to transform
+        delta_f (ndarray): Frequency spacing of grid
+
+    Returns:
+        ndarray: Scaled data in real space
+    """
+
+    DATA = np.fft.ifftshift(
+            np.fft.ifft(
+                    np.fft.ifftshift(data, axes=(-1))),
+            axes=(-1)) * data.shape[-1] * delta_f
+
+    return DATA
+
+
+def ft2(data, delta):
+    """
+    A properly scaled 2-D FFT
+
+    Parameters:
+        data (ndarray): An array on which to perform the FFT
+        delta (float): Spacing between elements
+
+    Returns:
+        ndarray: scaled FFT
+    """
+
+    DATA = np.fft.fftshift(
+            np.fft.fft2(
+                    np.fft.fftshift(data, axes=(-1,-2))
+                    ), axes=(-1,-2)
+            )*delta**2
+
+    return DATA
+
+def ift2(data, delta_f):
+    """
+    Scaled inverse 2-D FFT
+
+    Parameters:
+        data (ndarray): Data in Fourier Space to transform
+        delta_f (ndarray): Frequency spacing of grid
+
+    Returns:
+        ndarray: Scaled data in real space
+    """
+    N = data.shape[-1]
+    DATA = np.fft.ifftshift(
+            np.fft.ifft2(
+                    np.fft.ifftshift(data, axes=(-1,-2)
+                    ), axes=(-1,-2))
+            , axes=(-1,-2)) * (N * delta_f)**2
+
+    return DATA
+
+def rft(data, delta):
+    """
+    A properly scaled real 1-D FFT
+
+    Parameters:
+        data (ndarray): An array on which to perform the FFT
+        delta (float): Spacing between elements
+
+    Returns:
+        ndarray: scaled FFT
+    """
+    DATA = np.fft.fftshift(
+            np.fft.rfft(
+                    np.fft.fftshift(data, axes=(-1))),
+            axes=(-1)) * delta
+    return DATA
+
+def irft(data, delta_f):
+    """
+    Scaled real inverse 1-D FFT
+
+    Parameters:
+        data (ndarray): Data in Fourier Space to transform
+        delta_f (ndarray): Frequency spacing of grid
+
+    Returns:
+        ndarray: Scaled data in real space
+    """
+
+    DATA = np.fft.ifftshift(
+            np.fft.irfft(
+                    np.fft.ifftshift(data, axes=(-1))),
+            axes=(-1)) * data.shape[-1] * delta_f
+
+    return DATA
+
+def rft2(data, delta):
+    """
+    A properly scaled, real 2-D FFT
+
+    Parameters:
+        data (ndarray): An array on which to perform the FFT
+        delta (float): Spacing between elements
+
+    Returns:
+        ndarray: scaled FFT
+    """
+    DATA = np.fft.fftshift(
+            np.fft.rfft2(
+                    np.fft.fftshift(data, axes=(-1,-2))
+                    ), axes=(-1,-2)
+            )*delta**2
+
+    return DATA
+
+def irft2(data, delta_f):
+    """
+    Scaled inverse real 2-D FFT
+
+    Parameters:
+        data (ndarray): Data in Fourier Space to transform
+        delta_f (ndarray): Frequency spacing of grid
+
+    Returns:
+        ndarray: Scaled data in real space
+    """
+    N = data.shape[-1]
+    DATA = np.fft.ifftshift(
+            np.fft.irfft2(
+                    np.fft.ifftshift(data, axes=(-1,-2)), 
+                    axes=(-1,-2)
+                    ),
+            axes=(-1,-2)) * (N * delta_f)**2
+    return DATA
