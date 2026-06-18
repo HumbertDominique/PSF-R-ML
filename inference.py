@@ -41,6 +41,7 @@ outputDir = "output_infer/"
 inputDir = "output_ML/"
 
 datasets_name = ["lightfield", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+
 dataset_name_readable = ["lightfield", "WFSxy", "WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands", "WFSxy and SHWFS intensity map"]
 input_channels = [1, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
 input_size = [(270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
@@ -60,7 +61,8 @@ for i in range(len(datasets_name)):
 
 # %%
 for dataset_number in range(dataset_numbers):
-    print(f"Running inference for dataset {dataset_name_readable[dataset_number]} ({dataset_number+1}/{dataset_numbers})")
+    print("-------------------------------------------")
+    print(f"Starting inference for dataset {dataset_name_readable[dataset_number]} ({dataset_number+1}/{dataset_numbers})")
     with h5py.File(inputDir+datasets_name[dataset_number]+"/history.h5", 'r') as history:
         key = list(history.keys())
         # print(key)
@@ -101,10 +103,10 @@ for dataset_number in range(dataset_numbers):
     plt.rc("legend", fontsize=SMALL_SIZE)
     plt.rc("figure", titlesize=MEDIUM_SIZE)
     plt.suptitle("Training Loss and Validation Loss", fontsize=BIGGER_SIZE)
-    plt.figtext(0.5, 0.01, subtitles[1], ha="center", fontsize=MEDIUM_SIZE)
+    plt.figtext(0.5, 0.01, subtitles[dataset_number], ha="center", fontsize=MEDIUM_SIZE)
     plt.tight_layout(rect=[0, 0.05, 1, 1])
 
-    plt.savefig(outputDir + datasets_name[1]+ "/loss.png")
+    plt.savefig(outputDir + datasets_name[dataset_number]+ "/loss.png")
 
     # %% [markdown]
     # ## Load test data 
@@ -112,12 +114,13 @@ for dataset_number in range(dataset_numbers):
     # Except for when the lightfield is used, WFSx and WFSy are always used. Other cases are not handeled
 
     # %%
-    x_max = np.genfromtxt(inputDir+datasets_name[1]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[0][1]
-    y_max = np.genfromtxt(inputDir+datasets_name[1]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[1][1]
+    x_max = np.genfromtxt(inputDir+datasets_name[dataset_number]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[0][1]
+    y_max = np.genfromtxt(inputDir+datasets_name[dataset_number]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[1][1]
     # print("x_max: ", x_max)
     # print("y_max: ", y_max)
     # print(inputDir+datasets_name[1]+"/max_val.txt")
 
+    print(f"Loading {dataset_name_readable[dataset_number]} data")
     if datasets_name[dataset_number] == "lightfield":
         with h5py.File(testDataDir+"ao_lightfield_test_1.h5", 'r') as temp:
             key = list(temp.keys())
@@ -125,23 +128,23 @@ for dataset_number in range(dataset_numbers):
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            y_test = np.zeros((test_data.shape[0], *input_size[0]))
+            y_test = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
-                y_test[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[0][0], input_size[0][1]])
+                y_test[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
 
     elif datasets_name[dataset_number] == "WFSxy":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSx = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSx = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
-                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[1][0], input_size[1][1]])
+                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_WFSy"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSy = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSy = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[1][0], input_size[1][1]])
+                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             y_test = temp[key[0]][()][:]
@@ -153,21 +156,21 @@ for dataset_number in range(dataset_numbers):
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSx = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSx = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
-                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[2][0], input_size[2][1]])
+                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_WFSy"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSy = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSy = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[2][0], input_size[2][1]])
+                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_DM_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            DM_command = np.zeros((test_data.shape[0], *input_size[2]))
+            DM_command = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[2][0], input_size[2][1]])
+                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             y_test = temp[key[0]][()][:]
@@ -178,27 +181,27 @@ for dataset_number in range(dataset_numbers):
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSx = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSx = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
-                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[3][0], input_size[3][1]])
+                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_WFSy"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSy = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSy = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[3][0], input_size[3][1]])
+                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_DM_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            DM_command = np.zeros((test_data.shape[0], *input_size[2]))
+            DM_command = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[2][0], input_size[2][1]])
+                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_intensity_map_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            intensity_map = np.zeros((test_data.shape[0], *input_size[3]))
+            intensity_map = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[3][0], input_size[3][1]])
+                intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             y_test = temp[key[0]][()][:]
@@ -209,21 +212,21 @@ for dataset_number in range(dataset_numbers):
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSx = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSx = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
-                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[4][0], input_size[4][1]])
+                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_WFSy"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            WFSy = np.zeros((test_data.shape[0], *input_size[1]))
+            WFSy = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[4][0], input_size[4][1]])
+                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_intensity_map_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
-            intensity_map = np.zeros((test_data.shape[0], *input_size[4]))
+            intensity_map = np.zeros((test_data.shape[0], *input_size[dataset_number]))
         for i in range(test_data.shape[0]):
-                intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[4][0], input_size[4][1]])
+                intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             y_test = temp[key[0]][()][:]
@@ -234,7 +237,7 @@ for dataset_number in range(dataset_numbers):
     y_test = y_test / y_max
 
     # print(x_test.shape, y_test.shape)
-
+    # print(x_test.max(), y_test.max())
     # %%
     if datasets_name[dataset_number] == "lightfield":
         test_dataset = TensorDataset(
@@ -254,14 +257,15 @@ for dataset_number in range(dataset_numbers):
     # ## Rebuild model and load weights
 
     # %%
+    print(f"Loading {dataset_name_readable[dataset_number]} model")
     device = torch.device("cuda:0" if GPU and torch.cuda.is_available() else "cpu")
     model = unet.build_unet(input_shape=(*input_size[dataset_number], input_channels[dataset_number]), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx and WFSy
 
     if torch.cuda.device_count() > 1 and MULTIGPU:
         model = torch.nn.DataParallel(model)
-    lastCheckpoint = torch.load(inputDir+datasets_name[1]+"/model.weights.pth", map_location=device, weights_only=True)
-    # model.load_state_dict(torch.load(inputDir+datasets_name[0]+"/model.weights.pth", map_location=device, weights_only=True))
-    # model.load_state_dict(lastCheckpoint)
+   
+    lastCheckpoint = torch.load(inputDir+datasets_name[dataset_number]+"/model.weights.pth", map_location=device, weights_only=True)
+    model.load_state_dict(lastCheckpoint)
     trash = model.eval()
     # print(trash)
 
@@ -269,6 +273,7 @@ for dataset_number in range(dataset_numbers):
     # ## Infer
 
     # %%
+    print(f"Running {dataset_name_readable[dataset_number]} inference")
     test_losses = []
     predictions = []
     with torch.no_grad():
@@ -289,13 +294,14 @@ for dataset_number in range(dataset_numbers):
             start_idx = batch_idx * batch_size
             end_idx = start_idx + actual_batch_size
             predictions[start_idx:end_idx] = y_pred.squeeze().cpu().numpy()
-    print(f"100% done\n",)
+    print(f"100% done",)
+    print(f"Saving {dataset_name_readable[dataset_number]} inference results")
 
     test_losses = np.array(test_losses)
-
-    with h5py.File(outputDir + datasets_name[0] + "/predictions.h5", 'w') as f:
+    print(f"{outputDir+datasets_name[dataset_number]}/predictions.h5")
+    with h5py.File(outputDir + datasets_name[dataset_number] + "/predictions.h5", 'w') as f:
         f.create_dataset("predictions", data=predictions)
-    with h5py.File(outputDir + datasets_name[0] + "/test_losses.h5", 'w') as f:
+    with h5py.File(outputDir + datasets_name[dataset_number] + "/test_losses.h5", 'w') as f:
         f.create_dataset("test_losses", data=test_losses)
 
     # %%
