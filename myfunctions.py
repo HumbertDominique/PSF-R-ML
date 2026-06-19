@@ -110,159 +110,36 @@ def telescope_otf(nu_n, epsilon=None):
    otf_tsc[mask] = (2/np.pi) * (np.arccos(nu_n[mask]) - nu_n[mask] * np.sqrt(1 - nu_n[mask]**2))
    return otf_tsc
 
-"""
-Module containing useful FFT based function and classes
 
-M. J. Townson, O. J. D. Farley, G. Orban de Xivry, J. Osborn, and A. P. Reeves, "AOtools: a Python package for adaptive optics modelling and analysis," Opt. Express 27, 31316-31329 (2019))
-"""
-def ft(data, delta):
-    """
-    A properly scaled 1-D FFT
+def pad_center(arr, pad):
+    """--------------------------------------------------
+    Vectorised padding of arrays
+    inputs:
+        arr (ndarray): input array to be padded with the last 2 dimensions to be padded
+        pad (uint): padding factor
+    output:
+        padded (ndarray): padded arrays
+    --------------------------------------------------"""
+    *batch, n, k = arr.shape
+    if n != k:
+        raise ValueError("last two dimensions must be square")
+    
+    M = n * pad
+    out = np.zeros((*batch, M, M), dtype=arr.dtype)
+    i0 = M // 2 - n // 2
+    out[..., i0:i0+n, i0:i0+n] = arr  # https://www.geeksforgeeks.org/python/what-is-three-dots-or-ellipsis-in-python3/
+    return out
 
-    Parameters:
-        data (ndarray): An array on which to perform the FFT
-        delta (float): Spacing between elements
-
-    Returns:
-        ndarray: scaled FFT
-    """
-    DATA = np.fft.fftshift(
-            np.fft.fft(
-                    np.fft.fftshift(data, axes=(-1))),
-            axes=(-1)) * delta
-    return DATA
-
-def ift(data, delta_f):
-    """
-    Scaled inverse 1-D FFT
-
-    Parameters:
-        data (ndarray): Data in Fourier Space to transform
-        delta_f (ndarray): Frequency spacing of grid
-
-    Returns:
-        ndarray: Scaled data in real space
-    """
-
-    DATA = np.fft.ifftshift(
-            np.fft.ifft(
-                    np.fft.ifftshift(data, axes=(-1))),
-            axes=(-1)) * data.shape[-1] * delta_f
-
-    return DATA
-
-
-def ft2(data, delta):
-    """
-    A properly scaled 2-D FFT
-
-    Parameters:
-        data (ndarray): An array on which to perform the FFT
-        delta (float): Spacing between elements
-
-    Returns:
-        ndarray: scaled FFT
-    """
-
-    DATA = np.fft.fftshift(
-            np.fft.fft2(
-                    np.fft.fftshift(data, axes=(-1,-2))
-                    ), axes=(-1,-2)
-            )*delta**2
-
-    return DATA
-
-def ift2(data, delta_f):
-    """
-    Scaled inverse 2-D FFT
-
-    Parameters:
-        data (ndarray): Data in Fourier Space to transform
-        delta_f (ndarray): Frequency spacing of grid
-
-    Returns:
-        ndarray: Scaled data in real space
-    """
-    N = data.shape[-1]
-    DATA = np.fft.ifftshift(
-            np.fft.ifft2(
-                    np.fft.ifftshift(data, axes=(-1,-2)
-                    ), axes=(-1,-2))
-            , axes=(-1,-2)) * (N * delta_f)**2
-
-    return DATA
-
-def rft(data, delta):
-    """
-    A properly scaled real 1-D FFT
-
-    Parameters:
-        data (ndarray): An array on which to perform the FFT
-        delta (float): Spacing between elements
-
-    Returns:
-        ndarray: scaled FFT
-    """
-    DATA = np.fft.fftshift(
-            np.fft.rfft(
-                    np.fft.fftshift(data, axes=(-1))),
-            axes=(-1)) * delta
-    return DATA
-
-def irft(data, delta_f):
-    """
-    Scaled real inverse 1-D FFT
-
-    Parameters:
-        data (ndarray): Data in Fourier Space to transform
-        delta_f (ndarray): Frequency spacing of grid
-
-    Returns:
-        ndarray: Scaled data in real space
-    """
-
-    DATA = np.fft.ifftshift(
-            np.fft.irfft(
-                    np.fft.ifftshift(data, axes=(-1))),
-            axes=(-1)) * data.shape[-1] * delta_f
-
-    return DATA
-
-def rft2(data, delta):
-    """
-    A properly scaled, real 2-D FFT
-
-    Parameters:
-        data (ndarray): An array on which to perform the FFT
-        delta (float): Spacing between elements
-
-    Returns:
-        ndarray: scaled FFT
-    """
-    DATA = np.fft.fftshift(
-            np.fft.rfft2(
-                    np.fft.fftshift(data, axes=(-1,-2))
-                    ), axes=(-1,-2)
-            )*delta**2
-
-    return DATA
-
-def irft2(data, delta_f):
-    """
-    Scaled inverse real 2-D FFT
-
-    Parameters:
-        data (ndarray): Data in Fourier Space to transform
-        delta_f (ndarray): Frequency spacing of grid
-
-    Returns:
-        ndarray: Scaled data in real space
-    """
-    N = data.shape[-1]
-    DATA = np.fft.ifftshift(
-            np.fft.irfft2(
-                    np.fft.ifftshift(data, axes=(-1,-2)), 
-                    axes=(-1,-2)
-                    ),
-            axes=(-1,-2)) * (N * delta_f)**2
-    return DATA
+def otf_from_psf(psf):
+    """--------------------------------------------------
+    Computes the Optical Transfer Function (OTF) from a Point Spread Function (PSF)
+    inputs:
+        psf (ndarray): input PSF(s) of shape (*batch, height, width)
+    output:
+        otf (ndarray): computed OTF
+    --------------------------------------------------"""
+    # Normalize across spatial dimensions (keep batch axis)
+    psf = psf / psf.sum(axis=(-2, -1), keepdims=True)
+    
+    # Shift each PSF to origin, FFT over last 2 axes, shift back
+    return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(psf, axes=(-2, -1)), axes=(-2, -1)),axes=(-2, -1))
