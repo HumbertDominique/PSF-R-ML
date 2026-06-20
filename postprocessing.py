@@ -83,14 +83,16 @@ for dataset_number in range(dataset_numbers):
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             truths = temp[key[0]][()]
-    
+    x_max = np.genfromtxt("output_ML/"+datasets_name[dataset_number]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[0][1]
+    y_max = np.genfromtxt("output_ML/"+datasets_name[dataset_number]+"/max_val.txt", delimiter=',', dtype=None, encoding='utf-8')[1][1]
+
     print("Padding data, computing OTFs and Strehl ratios...")
 
     dx_scaled = dx*dx_scaling
     
     padded_ipsf_difflim = myfunctions.pad_center(ipsf_difflim, pad)        
-    padded_truth = myfunctions.pad_center(truths, pad)
-    padded_inferences = myfunctions.pad_center(inferences,pad)
+    padded_truth = myfunctions.pad_center(truths/y_max, pad)
+    padded_inferences = myfunctions.pad_center(inferences/y_max, pad)
 
     N = ipsf_difflim.shape[1]*pad
     fc = D / wl
