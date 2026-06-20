@@ -46,7 +46,7 @@ dataset_name_readable = ["lightfield", "WFSxy", "WFSxy and DM commands", "WFSxy,
 input_channels = [1, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
 input_size = [(270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
 
-batch_size = 64
+batch_size = 128
 
 # %%
 exposureTime = f"{exposureTime:,}".replace(",", " ")

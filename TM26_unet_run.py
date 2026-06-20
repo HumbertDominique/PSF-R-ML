@@ -47,42 +47,69 @@ print(torch.cuda.is_available())
 
 print("------------- Loading data -------------")
 # TODO: make size dynamic
-with h5py.File(inputDir+"ao_lightfield_train_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    # print(key)
-    x_train = temp[key[0]][()]
-with h5py.File(inputDir+"ao_lightfield_val_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    x_val = temp[key[0]][()]
+image_size = (80, 80)
 
-image_size = (x_train.shape[1], x_val.shape[2])
-print(image_size)
+WFS_x = np.zeros((35000, *image_size)) # *tuple expands the tuple into separate arguments. Very nice and to be remembered
+WFS_y = np.zeros((35000, *image_size))
+DM = np.zeros((35000, *image_size))
+with h5py.File(inputDir+"ao_WFSx_train_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()][:]
+    # print(tempData[0].shape)
+    for i in range(tempData.shape[0]):
+        WFS_x[i] = myfunctions.pixel_adder(tempData[i], final_shape= [80, 80])
+with h5py.File(inputDir+"ao_WFSy_train_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()][:]
+    for i in range(tempData.shape[0]):
+        WFS_y[i] = myfunctions.pixel_adder(tempData[i], final_shape = [80,80])
+with h5py.File(inputDir+"ao_DM_train_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()][:]
+    for i in range(tempData.shape[0]):
+        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [80,80])
 
-print(f"x_train shape: {x_train.shape}")
-print(f"x_val shape: {x_val.shape}")
+x_train = np.stack((WFS_x, WFS_y, DM), axis=1)
+del WFS_x, WFS_y, DM
+
+
+WFS_x = np.zeros((10000, *image_size)) # *tuple expands the tuple into separate arguments. Very nice and to be remembered
+WFS_y = np.zeros((10000, *image_size))
+DM = np.zeros((10000, *image_size))
+with h5py.File(inputDir+"ao_WFSx_val_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()]
+    for i in range(tempData.shape[0]):
+        WFS_x[i] = myfunctions.pixel_adder(tempData[i], final_shape = [80, 80])
+with h5py.File(inputDir+"ao_WFSy_val_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()]
+    for i in range(tempData.shape[0]):
+        WFS_y[i] = myfunctions.pixel_adder(tempData[i], final_shape = [80, 80])
+with h5py.File(inputDir+"ao_DM_val_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()]
+    for i in range(tempData.shape[0]):
+        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [80, 80])
+x_val = np.stack((WFS_x, WFS_y, DM), axis=1)
+del WFS_x, WFS_y, DM
 
 with h5py.File(inputDir+"ao_ipsf_train_1.h5", 'r') as temp:
     key = list(temp.keys())
-    tempData = temp[key[0]][()][:]
-    y_train = np.zeros((tempData.shape[0], 270, 270))
-    for i in range(tempData.shape[0]):
-        y_train[i] = myfunctions.pixel_adder(tempData[i], final_shape=[270, 270])
+    y_train = temp[key[0]][()][:]
 with h5py.File(inputDir+"ao_ipsf_val_1.h5", 'r') as temp:
     key = list(temp.keys())
-    tempData = temp[key[0]][()][:]
-    y_val = np.zeros((tempData.shape[0], 270, 270))
-    for i in range(tempData.shape[0]):
-        y_val[i] = myfunctions.pixel_adder(tempData[i], final_shape=[270, 270])
+    y_val = temp[key[0]][()][:]
 
+
+print(f"x_train shape: {x_train.shape}")
 print(f"y_train shape: {y_train.shape}")
+print(f"x_val shape: {x_val.shape}")
 print(f"y_val shape: {y_val.shape}")
 
-plt.close(0)
-plt.figure(0)
-plt.imshow(x_train[0])
-
 device = torch.device("cuda:0" if GPU and torch.cuda.is_available() else "cpu")
-model = unet.build_unet(input_shape=(*image_size, 1), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx and WFSy
+model = unet.build_unet(input_shape=(80, 80, 3), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx, WFSy and intensity
+
 print("------------- Data Loaded -------------")
 
 
@@ -96,8 +123,9 @@ weight_path = outputDir+"{}_weights.best.pth".format("cxr_reg")
 
 # Convert numpy arrays to torch tensors
 # TODO: Evaluate pertinence of float32
-x_train_tens = torch.tensor(x_train, dtype=torch.float32).unsqueeze(1)/x_train.max()
-x_val_tens = torch.tensor(x_val, dtype=torch.float32).unsqueeze(1)/x_train.max()
+
+x_train_tens = torch.tensor(x_train, dtype=torch.float32)/x_train.max()
+x_val_tens = torch.tensor(x_val, dtype=torch.float32)/x_train.max()
 y_train_tens = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)/y_train.max()
 y_val_tens = torch.tensor(y_val, dtype=torch.float32).unsqueeze(1)/y_train.max()
 
@@ -114,7 +142,7 @@ print("------------- Data Loaded -------------")
 
 
 # Define batch size depending on device
-batch_size = 64 if device.type == "cuda" else 12
+batch_size = 128 if device.type == "cuda" else 12
 
 train_loader = DataLoader(TensorDataset(x_train_tens, y_train_tens), batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(TensorDataset(x_val_tens, y_val_tens), batch_size=batch_size, shuffle=False)
