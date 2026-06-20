@@ -145,6 +145,52 @@ def otf_from_psf(psf):
     return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(psf, axes=(-2, -1)), axes=(-2, -1)),axes=(-2, -1))
 
 def otf_to_psf(otf, psf_sum):
-
+    """--------------------------------------------------
+    Computes the Point Spread Function (PSF) from a Point Spread Function (OTF)
+    inputs:
+        otf (ndarray): input OTF(s) of shape (*batch, height, width)
+    output:
+        psf (ndarray): computed PSF(s) of shape (*batch, height, width)
+    --------------------------------------------------"""
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(otf, axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1)).real* psf_sum
 
+def fwhm_1D(profile):
+    """----------------------------------------------------
+    Find FWHM for 1D profile: count of pixels >= half_max
+    ----------------------------------------------------"""
+    above_half = np.where(profile >= profile.max()/2)[0]
+    if len(above_half) == 0:
+        return 0
+    return above_half[-1] - above_half[0] + 1  # +1 for inclusive count
+
+def fwhm_2d(img):
+    """----------------------------------------------------
+    Measure FWHM directly on 2D PSF image without fitting.
+    ----------------------------------------------------"""
+    y_c, x_c = np.unravel_index(np.argmax(img, axis=None), img.shape) # https://numpy.org/doc/2.2/reference/generated/numpy.argmax.html
+
+    max_val = img[y_c, x_c]
+    half_max = max_val / 2
+
+    FWHM_x = fwhm_1D(img[y_c, :])
+    FWHM_y = fwhm_1D(img[:, x_c])
+
+    return FWHM_x, FWHM_y
+
+
+def radial_average(psf, center=None):
+    if center is None:
+        center = np.unravel_index(np.argmax(psf), psf.shape)
+
+    cy, cx = center
+    y, x = np.indices(psf.shape)
+    r = np.sqrt((x - cx)**2 + (y - cy)**2)
+
+    r_max = int(r.max())
+    radial_profile = []
+
+    for i in range(r_max + 1):
+        mask = (r >= i) & (r < i + 1)
+        radial_profile.append(psf[mask].mean())
+
+    return np.array(radial_profile)
