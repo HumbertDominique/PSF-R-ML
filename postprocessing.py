@@ -58,7 +58,7 @@ dataset_numbers = len(datasets_name)
 
 for dataset_number in range(dataset_numbers):
     print("-------------------------------------------")
-    print(f"Starting inference for dataset {dataset_name_readable[dataset_number]} ({dataset_number+1}/{dataset_numbers})")
+    print(f"Starting postprocessing for dataset {dataset_name_readable[dataset_number]} ({dataset_number+1}/{dataset_numbers})")
     print(f"Loading data for dataset {dataset_name_readable[dataset_number]}...")
     if datasets_name[dataset_number] == "lightfield":
         
@@ -248,7 +248,7 @@ for dataset_number in range(dataset_numbers):
     # --- Top-left: title + explanation ---
     ax_text.axis("off")
     ax_text.text(0.45, 1, f"FWHM computation results\nand data for test sample N°{therandom}", ha="center", va="center", fontsize=BIGGER_SIZE)
-    ax_text.text(0.45, 0.25, "Difference between the inferred and measured FWHM in\nx and y direction as well as the radial average for\neach sample of the test set. A contour plot of the inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the selected sample inference\nis highlighted in red.",
+    ax_text.text(0.45, 0.25, "Difference between the inferred and measured FWHM in\nx and y direction as well as the radial average for\neach sample of the test set. A contour plot of the inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the randomly selected sample inference\nis highlighted in red.",
                  ha="center", va="center", fontsize=18)
     # --- Top-right: contour plot ---
     ax_contour.contour(disk_test[therandom], colors='r', linestyles='-')
@@ -328,8 +328,8 @@ for dataset_number in range(dataset_numbers):
     fig, (ax, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 2]})
 
     # Top plot: EE
-    ax.plot(EE_measured, '.k', label=r'$S_{R}$', markersize=1)
-    ax.plot(EE_inferred, '.r', label=r'$S_{ref}$', markersize=1)
+    ax.plot(EE_measured, '.k', label=r'$EE_{R}$', markersize=1)
+    ax.plot(EE_inferred, '.r', label=r'$EE_{ref}$', markersize=1)
     ax.set_ylim([0, 1])
     ax.fill_between(range(len(EE_measured)), lower_bounds, upper_bounds, 
                     color='gray', alpha=0.3, edgecolor='none', label='±10% of expected EE')

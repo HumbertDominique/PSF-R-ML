@@ -317,7 +317,7 @@ for dataset_number in range(dataset_numbers):
     plt.xticks(fontsize=SMALL_SIZE*.8)
     plt.yticks(fontsize=SMALL_SIZE*.8)
     plt.legend(fontsize=SMALL_SIZE)
-    plt.xlim([0, test_losses.shape[0]])
+    plt.xlim([0, test_losses.shape[0]-1])
     plt.ylim([0, max(val_loss[-1]*1.1, max(test_losses)*1.1)])
     plt.grid()
 
