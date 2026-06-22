@@ -21,5 +21,6 @@ PA25_ML.ipynb|Jupyter notebook used for training _PA\_25\_unet.py_ on data in PA
 |inference.py|inference script that can be run on a remote server|model.weights.pth, history.h5 and the test data for each dataset.|Training and validation loss plot, test loss plot, predictions|-|
 |postprocessing.ipynb||||-|
 |postprocessing.py||||-|
+|postprocessing_long.py||||-|
 |myfunctions.py|All helper functions, either new or reused from PA 2025|-|-|-|
 |magnitude_swipe_processing.ipynb|Processing parameter swiped datasets to output the corresponding RWFE plots of the AO regulation and the Strehl ratios plot of the long exposures PSF|||-|

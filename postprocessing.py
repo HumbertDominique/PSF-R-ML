@@ -1,7 +1,8 @@
-# %% [markdown]
-# # Postprocessing
-
-# %%
+####
+# Postprocessing script for iPSF
+# TM 2026, Dominique Humbert
+#
+####
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -217,9 +218,9 @@ for dataset_number in range(dataset_numbers):
         measured_fwhm_r.append((idx[-1] - idx[0])*2)
     # print(f"FWHM of the measured PSF: {measured_fwhm_r[0]} pixels")
 
-    diff_FWHM_x = np.array(measured_FWHM_x) - np.array(inferred_FWHM_x)
-    diff_FWHM_y = np.array(measured_FWHM_y) - np.array(inferred_FWHM_y)
-    diff_FWHM_r = np.array(measured_fwhm_r) - np.array(inference_fwhm_r)
+    diff_FWHM_x = np.array(inferred_FWHM_x) - np.array(measured_FWHM_x)
+    diff_FWHM_y = np.array(inferred_FWHM_y) - np.array(measured_FWHM_y)
+    diff_FWHM_r = np.array(inference_fwhm_r) - np.array(measured_fwhm_r)
 
     half_max = psfs_inferred_from_otf.max() / 2
     disk_test = psfs_inferred_from_otf > half_max
