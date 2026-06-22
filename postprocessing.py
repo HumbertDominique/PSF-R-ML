@@ -33,9 +33,9 @@ outputDir = "output_post/"
 inputDir = "output_infer/"
 
 datasets_name = ["lightfield", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-datasets_name = ["WFSxy_DM", "WFSxy_DM_intensity"]
-# dataset_name_readable = ["lightfield", "WFSxy", "WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands", "WFSxy and SHWFS intensity map"]
-dataset_name_readable = ["WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands"]
+# datasets_name = ["WFSxy_DM", "WFSxy_DM_intensity"]
+dataset_name_readable = ["lightfield", "WFSxy", "WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands", "WFSxy and SHWFS intensity map"]
+# dataset_name_readable = ["WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands"]
 
 
 D = 17.5e-3  # [m]
@@ -253,8 +253,8 @@ for dataset_number in range(dataset_numbers):
     # --- Top-right: contour plot ---
     ax_contour.contour(disk_test[therandom], colors='r', linestyles='-')
     ax_contour.contour(disk_real[therandom], colors='k', linestyles='--')
-    ax_contour.set_xlim([80-half_figure, 80+half_figure])
-    ax_contour.set_ylim([80-half_figure, 80+half_figure])
+    ax_contour.set_xlim([psfs_inferred_from_otf.shape[1]//2-half_figure, psfs_inferred_from_otf.shape[1]//2+half_figure])
+    ax_contour.set_ylim([psfs_inferred_from_otf.shape[1]//2-half_figure, psfs_inferred_from_otf.shape[1]//2+half_figure])
     ax_contour.set_title(f"FWHM Contour plot", fontsize=16)
     ax_contour.yaxis.set_label_position("right")
     ax_contour.yaxis.tick_right()
