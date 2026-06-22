@@ -355,7 +355,7 @@ for dataset_number in range(dataset_numbers):
 #     ax2.set_xlim([0, EE_inferred.shape[0]])
 #     ax2.grid()
 #     ax2.tick_params(axis='x', labelsize=SMALL_SIZE)
-#     plt.figtext(0.5, 0.01, f"At the computing scale, the\nAiry disk radius is {airy_r_px//1:.0f} px, floored from {airy_r_px:.0f} pixels.", ha="center", fontsize=MEDIUM_SIZE)
+#     plt.figtext(0.5, 0.01, f"At the computing scale, the\nAiry disk radius is {airy_r_px//1:.0f} px, floored from {airy_r_px:.2f} pixels.", ha="center", fontsize=MEDIUM_SIZE)
 #     plt.tight_layout(rect=[0, 0.08, 1, 1])
 #     # plt.tight_layout()
 
