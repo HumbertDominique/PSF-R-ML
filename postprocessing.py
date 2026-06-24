@@ -124,8 +124,8 @@ for dataset_number in range(dataset_numbers):
     plt.plot(freq, OTF_aliasing[N//2, :],"--.",label = "Aliasing OTF")
     plt.plot(freq, OTF_truths[therandom,N//2, :],"--k", label="Measured OTF without aliasing")
     plt.plot(freq, OTF_inferences[therandom,N//2, :]*FREQ_MASK[N//2,:],'r', label="Inference OTF")
-    # plt.plot(freq, OTF_ipsf_difflim[N//2, :]-OTF_aliasing[N//2, :], "--.k", label="Diffraction-limited OTF\nfrom simulated PSF without aliasing")
-    # plt.vlines([-fc, fc], 0, 1, "k", linestyles="dotted", label = r"$\pm$ cutoff frequency")
+    plt.plot(freq, OTF_ipsf_difflim[N//2, :]-OTF_aliasing[N//2, :], "--.k", label="Diffraction-limited OTF\nfrom simulated PSF without aliasing")
+    plt.vlines([-fc, fc], 0, 1, "k", linestyles=[(0, (1, 10))], label = r"$\pm$ cutoff frequency")
     plt.title(f"Diffraction limited and randomly\nselected OTFs (N°{therandom})", fontsize = BIGGER_SIZE)
     plt.xlabel("Angular frequency [cycles/meter]", fontsize=SMALL_SIZE)
     plt.ylabel("OTF", fontsize=SMALL_SIZE)
@@ -159,7 +159,7 @@ for dataset_number in range(dataset_numbers):
     ax.grid()
 
     # Bottom plot: Relative distance (ax2 is now a separate subplot below)
-    ax2.plot(Strehls_rel_fidd * 100, '.-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
+    ax2.plot(Strehls_rel_fidd * 100, '-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
     ax2.set_ylabel('Relative distance [%]', fontsize=MEDIUM_SIZE, color='k')
     ax2.tick_params(axis='y', labelsize=SMALL_SIZE, colors='k')
     symetric_lim = max(abs(np.min(Strehls_rel_fidd) * 110), abs(np.max(Strehls_rel_fidd) * 110))
@@ -343,7 +343,7 @@ for dataset_number in range(dataset_numbers):
     ax.grid()
 
     # Bottom plot: Relative distance (ax2 is now a separate subplot below)
-    ax2.plot(EE_rel_diff * 100, '.-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
+    ax2.plot(EE_rel_diff * 100, '-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
     ax2.set_ylabel('Relative distance [%]', fontsize=MEDIUM_SIZE, color='k')
     ax2.tick_params(axis='y', labelsize=SMALL_SIZE, colors='k')
     symetric_lim = max(abs(np.min(EE_rel_diff) * 110), abs(np.max(EE_rel_diff) * 110))

@@ -84,6 +84,7 @@ for dataset_number in range(dataset_numbers):
     ax1.legend()
     ax1.set_xlim([0, Epochs-1])
     ax1.set_ylim([0, max(max(loss), max(val_loss))])
+    ax1.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), useMathText=True)
     ax1.grid()
 
     ax2.plot(val_loss, "--r", label="Validation loss")
@@ -93,6 +94,7 @@ for dataset_number in range(dataset_numbers):
     ax2.legend()
     ax2.set_xlim([0, Epochs-1])
     ax2.set_ylim([0, max(val_loss)])
+    ax2.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), useMathText=True)
     ax2.grid()
 
     plt.rc("font", size=MEDIUM_SIZE)
@@ -316,6 +318,7 @@ for dataset_number in range(dataset_numbers):
     plt.ylabel("MSE", fontsize=SMALL_SIZE)
     plt.xticks(fontsize=SMALL_SIZE*.8)
     plt.yticks(fontsize=SMALL_SIZE*.8)
+    plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), useMathText=True)
     plt.legend(fontsize=SMALL_SIZE)
     plt.xlim([0, test_losses.shape[0]-1])
     plt.ylim([0, max(val_loss[-1]*2, max(test_losses)*2)])
