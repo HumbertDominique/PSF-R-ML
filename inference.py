@@ -20,8 +20,13 @@ import TM26_unet as unet
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
+
+train_split = 0.7
+
 metadata = myfunctions.read_metadata_file("dataInputs/metadata.txt")
 exposureTime = metadata["exposureTime"]
+train_time = exposureTime * train_split
+
 
 # %% [markdown]
 # ## Inputs
@@ -48,8 +53,8 @@ input_size = [(270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
 
 batch_size = 128
 
-# %%
-exposureTime = f"{exposureTime:,}".replace(",", " ")
+train_time = int(train_time)
+exposureTime = f"{train_time:,}".replace(",", " ")
 subtitles = [f"Trained on {exposureTime} {dataset_name_readable[j]}" for j in range(len(dataset_name_readable))]
 dataset_numbers = len(datasets_name)
 
