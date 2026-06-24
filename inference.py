@@ -15,7 +15,7 @@ import os
 import myfunctions
 import h5py
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,3" # https://discuss.pytorch.org/t/limit-process-to-single-gpu/55806/2
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,3" # https://discuss.pytorch.org/t/limit-process-to-single-gpu/55806/2
 import TM26_unet as unet
 import torch
 from torch.utils.data import DataLoader, TensorDataset
