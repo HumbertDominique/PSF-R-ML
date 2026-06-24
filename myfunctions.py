@@ -142,7 +142,7 @@ def otf_from_psf(psf):
     psf = psf / psf.sum(axis=(-2, -1), keepdims=True)
     
     # Shift each PSF to origin, FFT over last 2 axes, shift back
-    return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(psf, axes=(-2, -1)), axes=(-2, -1)),axes=(-2, -1))
+    return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(psf, axes=(-2, -1)), axes=(-2, -1)),axes=(-2, -1)).real
 
 def otf_to_psf(otf, psf_sum):
     """--------------------------------------------------

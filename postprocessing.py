@@ -221,6 +221,7 @@ for dataset_number in range(dataset_numbers):
     diff_FWHM_x = np.array(inferred_FWHM_x) - np.array(measured_FWHM_x)
     diff_FWHM_y = np.array(inferred_FWHM_y) - np.array(measured_FWHM_y)
     diff_FWHM_r = np.array(inference_fwhm_r) - np.array(measured_fwhm_r)
+    difflim_FWMH = 1.028 * wl / (D * dx_scaled)
 
     half_max = psfs_inferred_from_otf.max() / 2
     disk_test = psfs_inferred_from_otf > half_max
@@ -249,7 +250,7 @@ for dataset_number in range(dataset_numbers):
     # --- Top-left: title + explanation ---
     ax_text.axis("off")
     ax_text.text(0.45, 1, f"FWHM computation results\nand data for test sample N°{therandom}", ha="center", va="center", fontsize=BIGGER_SIZE)
-    ax_text.text(0.45, 0.25, "Difference between the inferred and measured FWHM in\nx and y direction as well as the radial average for\neach sample of the test set. A contour plot of the inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the randomly selected sample inference\nis highlighted in red.",
+    ax_text.text(0.45, 0.25, f"Difference between the inferred and measured FWHMs in\nx, y and the radial average\n The contour of an inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the randomly selected sample inference\nis highlighted in red.\n As reference, the diffraction-limited FWHM is {difflim_FWMH:.2f} pixels.",
                  ha="center", va="center", fontsize=18)
     # --- Top-right: contour plot ---
     ax_contour.contour(disk_test[therandom], colors='r', linestyles='-')
