@@ -307,21 +307,21 @@ for dataset_number in range(dataset_numbers):
     # %%
     plt.close("all")
     plt.figure(figsize=(10, 6))
-    plt.plot(test_losses, "-k", label= "test loss")
-    plt.hlines(y=val_loss[-1], xmin=0, xmax=test_losses.shape[0], colors='b', linestyles='--', label="Final validation loss")
+    plt.plot(test_losses, "-k", label= "Test MSE")
+    plt.hlines(y=val_loss[-1], xmin=0, xmax=test_losses.shape[0], colors='b', linestyles='--', label="Final validation MSE")
     plt.text(x=test_losses.shape[0]//2, y=val_loss[-1]*1.1, s=f"{myfunctions.eng_notation(val_loss[-1],1)}", color='b', fontsize=SMALL_SIZE)
 
-    plt.title(dataset_name_readable[dataset_number] + "\ntest loss", fontsize=BIGGER_SIZE)
+    plt.title(dataset_name_readable[dataset_number] + "\nTest MSE", fontsize=BIGGER_SIZE)
     plt.xlabel(f"Test batch number (batch size = {batch_size})", fontsize=SMALL_SIZE)
-    plt.ylabel("Loss", fontsize=SMALL_SIZE)
+    plt.ylabel("MSE", fontsize=SMALL_SIZE)
     plt.xticks(fontsize=SMALL_SIZE*.8)
     plt.yticks(fontsize=SMALL_SIZE*.8)
     plt.legend(fontsize=SMALL_SIZE)
     plt.xlim([0, test_losses.shape[0]-1])
-    plt.ylim([0, max(val_loss[-1]*1.1, max(test_losses)*1.1)])
+    plt.ylim([0, max(val_loss[-1]*2, max(test_losses)*2)])
     plt.grid()
 
-    plt.savefig(outputDir + datasets_name[dataset_number]+ "/test_loss.png")
+    plt.savefig(outputDir + datasets_name[dataset_number]+ "/test_MSE.png")
 
 
     # %% [markdown]
