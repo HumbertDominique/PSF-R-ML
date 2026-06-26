@@ -25,6 +25,7 @@ print("------------- Starting TM26_unet_run.py -------------")
 outputDir = "output_ML/lightfield_DM/"
 inputDir = "output_prep/"
 history_path = outputDir + "/history.h5"
+weight_path = outputDir+"{}_weights.best.pth".format("cxr_reg")
 
 max_batch_size = 80
 LR_factor_on_plateau = 0.1

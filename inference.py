@@ -45,11 +45,11 @@ testDataDir = "output_prep/"
 outputDir = "output_infer/"
 inputDir = "output_ML/"
 
-datasets_name = ["lightfield", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+datasets_name = ["lightfield","lightfield_DM" , "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
 
-dataset_name_readable = ["lightfield", "WFSxy", "WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands", "WFSxy and SHWFS intensity map"]
-input_channels = [1, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
-input_size = [(270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
+dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
+input_channels = [1, 2, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
 
 batch_size = 128
 
@@ -138,6 +138,27 @@ for dataset_number in range(dataset_numbers):
             y_test = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
                 y_test[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+
+    if datasets_name[dataset_number] == "lightfield_DM":
+        with h5py.File(testDataDir+"ao_lightfield_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            x_test = temp[key[0]][()][:]
+        with h5py.File(testDataDir+"ao_DM_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            DM_command = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+        for i in range(test_data.shape[0]):
+                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            y_test = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+            for i in range(test_data.shape[0]):
+                y_test[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        
+        x_test = np.stack((x_test, DM_command), axis=1) # stack WFSx and WFSy along the channel dimension
+        del DM_command, test_data
+
 
     elif datasets_name[dataset_number] == "WFSxy":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
