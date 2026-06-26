@@ -45,11 +45,14 @@ testDataDir = "output_prep/"
 outputDir = "output_infer/"
 inputDir = "output_ML/"
 
-datasets_name = ["lightfield","lightfield_DM" , "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-
-dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-input_channels = [1, 2, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
-input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
+# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+datasets_name = ["lightfield_DM"]
+# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
+dataset_name_readable = ["lightfield with DM commands"]
+# input_channels = [1, 2, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+# input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
+input_channels = [2] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+input_size = [(270, 270)]
 
 batch_size = 128
 
@@ -138,11 +141,13 @@ for dataset_number in range(dataset_numbers):
             y_test = np.zeros((test_data.shape[0], *input_size[dataset_number]))
             for i in range(test_data.shape[0]):
                 y_test[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        x_test = x_test / x_max
+        y_test = y_test / y_max
 
     if datasets_name[dataset_number] == "lightfield_DM":
         with h5py.File(testDataDir+"ao_lightfield_test_1.h5", 'r') as temp:
             key = list(temp.keys())
-            x_test = temp[key[0]][()][:]
+            x_test = temp[key[0]][()][:]/ x_max
         with h5py.File(testDataDir+"ao_DM_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             test_data = temp[key[0]][()][:]
@@ -158,6 +163,7 @@ for dataset_number in range(dataset_numbers):
         
         x_test = np.stack((x_test, DM_command), axis=1) # stack WFSx and WFSy along the channel dimension
         del DM_command, test_data
+        y_test = y_test / y_max
 
 
     elif datasets_name[dataset_number] == "WFSxy":
@@ -179,6 +185,8 @@ for dataset_number in range(dataset_numbers):
 
         x_test = np.stack((WFSx, WFSy), axis=1) # stack WFSx and WFSy along the channel dimension
         del WFSx, WFSy, test_data
+        x_test = x_test / x_max
+        y_test = y_test / y_max
 
     elif datasets_name[dataset_number] == "WFSxy_DM":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
@@ -204,7 +212,8 @@ for dataset_number in range(dataset_numbers):
             y_test = temp[key[0]][()][:]
         x_test = np.stack((WFSx, WFSy, DM_command), axis=1) # stack WFSx and WFSy along the channel dimension
         del WFSx, WFSy, DM_command, test_data
-
+        x_test = x_test / x_max
+        y_test = y_test / y_max
     elif datasets_name[dataset_number] == "WFSxy_DM_intensity":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
@@ -235,6 +244,8 @@ for dataset_number in range(dataset_numbers):
             y_test = temp[key[0]][()][:]
         x_test = np.stack((WFSx, WFSy, DM_command, intensity_map), axis=1) # stack WFSx and WFSy along the channel dimension
         del WFSx, WFSy, DM_command, intensity_map, test_data
+        x_test = x_test / x_max
+        y_test = y_test / y_max
 
     elif datasets_name[dataset_number] == "WFSxy_intensity":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
@@ -260,9 +271,9 @@ for dataset_number in range(dataset_numbers):
             y_test = temp[key[0]][()][:]
         x_test = np.stack((WFSx, WFSy, intensity_map), axis=1) # stack WFSx and WFSy along the channel dimension
         del WFSx, WFSy, intensity_map, test_data
-
-    x_test = x_test / x_max
-    y_test = y_test / y_max
+        x_test = x_test / x_max
+        y_test = y_test / y_max
+   
 
     # print(x_test.shape, y_test.shape)
     # print(x_test.max(), y_test.max())

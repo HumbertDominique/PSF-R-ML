@@ -33,10 +33,10 @@ testDataDir = "output_prep/"
 outputDir = "output_post/"
 inputDir = "output_infer/"
 
-datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-# datasets_name = ["WFSxy_DM", "WFSxy_DM_intensity"]
-dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-# dataset_name_readable = ["WFSxy and DM commands", "WFSxy, SHWFS intensity map and DM commands"]
+# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+datasets_name = ["lightfield_DM"]
+# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
+dataset_name_readable = ["lightfield with DM commands"]
 
 
 D = 17.5e-3  # [m]
@@ -75,6 +75,21 @@ for dataset_number in range(dataset_numbers):
             tempdata = temp[key[0]][()][:]
             for i in range(tempdata.shape[0]):
                 truths[i,:,:] = myfunctions.pixel_adder(tempdata[i],final_shape=[inferences.shape[1], inferences.shape[2]])
+
+    elif datasets_name[dataset_number] == "lightfield_DM":
+        with h5py.File(inputDir+datasets_name[dataset_number]+"/predictions.h5", 'r') as temp:
+            inferences = temp[list(temp.keys())[0]][()]
+        with h5py.File("dataInputs/ipsf_difflim.h5", 'r') as temp:
+            dx_scaling = temp[list(temp.keys())[0]][()].shape[1]/inferences.shape[1]
+            ipsf_difflim = myfunctions.pixel_adder(temp[list(temp.keys())[0]][()],final_shape=[inferences.shape[1], inferences.shape[2]])
+
+        truths = np.zeros_like(inferences)
+        with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            tempdata = temp[key[0]][()][:]
+            for i in range(tempdata.shape[0]):
+                truths[i,:,:] = myfunctions.pixel_adder(tempdata[i],final_shape=[inferences.shape[1], inferences.shape[2]])
+         
         
     else:
         with h5py.File(inputDir+datasets_name[dataset_number]+"/predictions.h5", 'r') as temp:
@@ -183,9 +198,9 @@ for dataset_number in range(dataset_numbers):
     print("Computing FWMHs...")
     # FWMH
 
-    otf = myfunctions.otf_from_psf(padded_inferences)
+    otf = OTF_inferences#myfunctions.otf_from_psf(padded_inferences)
     psfs_inferred_from_otf = myfunctions.otf_to_psf(otf,padded_inferences[...,:,:].sum())
-    otf_real = myfunctions.otf_from_psf(padded_truth)
+    otf_real = OTF_truths#myfunctions.otf_from_psf(padded_truth)
     psfs_truth_from_otf = myfunctions.otf_to_psf(otf_real,padded_truth[...,:,:].sum())
 
     inferred_FWHM_x = []

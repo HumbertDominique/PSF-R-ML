@@ -129,8 +129,8 @@ print(f"x_val_tens shape {x_val_tens.shape}")
 print(f"y_val_tens shape {y_val_tens.shape}")
 
 with open(outputDir + "max_val.txt", "w") as f:
-    f.write(f"x_train.max(), {x_train.max()}\n")
-    f.write(f"y_train.max(), {y_train.max()}\n")
+    f.write(f"x_train.max(), {x_max}\n")
+    f.write(f"y_train.max(), {y_max}\n")
 
 
 
