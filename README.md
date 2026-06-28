@@ -19,8 +19,12 @@ PA25_ML.ipynb|Jupyter notebook used for training _PA\_25\_unet.py_ on data in PA
 |TM26_unet_run.py|Same as unet_26.ipynb but as a python only file in order to run on a remote server. In order to changer the training data, the loading part of the script has to be replpaced by the propper one. They can be found under their own sections in _unet\_26.ipynb_|Same as _unet\_26.ipynb_|Same as _unet\_26.ipynb_|-|
 |inference.ipynb|Jupyter notebook used to develop the inference script.|model.weights.pth, history.h5 and the test data for each dataset.|Training and validation loss plot, test loss plot, predictions|-|
 |inference.py|inference script that can be run on a remote server|model.weights.pth, history.h5 and the test data for each dataset.|Training and validation loss plot, test loss plot, predictions|-|
-|postprocessing.ipynb||||-|
-|postprocessing.py||||-|
-|postprocessing_long.py||||-|
+|postprocessing.ipynb|Jupyter notebook used to develop the other postprocessing scripts.|||-|
+|postprocessing.py|Instantaneous data postprocessing script for models outputing a PSF|inferences, normalisation values, diffraction limited iPSF|iFWMH, a random iOTF, iEE, iStrehl|-|
+|postprocessing_long.py|Long exposure postprocessing script for models outputing a PSF|inferences, normalisation values, diffraction limited iPSF|FWMH, OTFs, EE, Strehl|-|
+|postprocessing_otf.py|Instantaneous data postprocessing script for models outputing an OTF|inferences, normalisation values, diffraction limited iPSF|iFWMH, a random iOTF, iEE, iStrehl|-|
+|postprocessing_otf_long.py|Long exposure postprocessing script for models outputing an OTF|inferences, normalisation values, diffraction limited iPSF|FWMH, OTFs, EE, Strehl|-|
 |myfunctions.py|All helper functions, either new or reused from PA 2025|-|-|-|
 |magnitude_swipe_processing.ipynb|Processing parameter swiped datasets to output the corresponding RWFE plots of the AO regulation and the Strehl ratios plot of the long exposures PSF|||-|
+|misc.ipynb|Jupyter notebook used for computations taht are not worht a complete script|synthetic iPSFs|iOTFs for training, validatiaon and test|---|
+|---|---|---|---|---|

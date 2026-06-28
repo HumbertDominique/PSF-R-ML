@@ -28,10 +28,10 @@ inputDir = "output_infer/"
 exposures = [10, 100, 1000, 5000]
 # exposures = [10, 100]
 
-# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-datasets_name = ["lightfield_DM"]
-# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-dataset_name_readable = ["lightfield with DM commands", "WFSxy"]
+datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+# datasets_name = ["lightfield_DM"]
+dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
+# dataset_name_readable = ["lightfield with DM commands", "WFSxy"]
 
 
 D = 17.5e-3  # [m]
@@ -179,8 +179,8 @@ for dataset_number in range(dataset_numbers):
     truth_errors = truths_Strehls * 0.10
 
     plt.figure(figsize=(10, 6))
-    plt.errorbar(x, truths_Strehls, yerr=truth_errors, fmt='.k', ecolor='k', capsize=3, label = r"True value $\pm$10%")
-    plt.plot(x, inference_Strehls, '.r',label = "Infered value")
+    plt.errorbar(x, truths_Strehls, yerr=truth_errors, fmt='.k', ecolor='k', capsize=3, label = r"True value $\pm$10%", zorder=1)
+    plt.plot(x, inference_Strehls, '.r',label = "Infered value", zorder=3)
 
     plt.title(dataset_name_readable[dataset_number] + f"\nStrehl ratios for an integration time\n of multiple iterations\n", fontsize=BIGGER_SIZE)
     plt.xticks(x, exposures,fontsize=SMALL_SIZE*.8)
@@ -327,8 +327,8 @@ for dataset_number in range(dataset_numbers):
     truth_errors = EE_measured * 0.10
 
     plt.figure(figsize=(10, 6))
-    plt.errorbar(x, EE_measured, yerr=truth_errors, fmt='.k', ecolor='k', capsize=3, label = r"True value $\pm$10%")
-    plt.plot(x, EE_inferred, '.r',label = "Infered value")
+    plt.errorbar(x, EE_measured, yerr=truth_errors, fmt='.k', ecolor='k', capsize=3, label = r"True value $\pm$10%", zorder=1)
+    plt.plot(x, EE_inferred, '.r', label = "Infered value", zorder=3)
 
     plt.title(dataset_name_readable[dataset_number] + f"\nEE within the 1st Airy disc for an integration\ntime of multiple iterations\n", fontsize=BIGGER_SIZE)
     plt.xticks(x, exposures,fontsize=SMALL_SIZE*.8)

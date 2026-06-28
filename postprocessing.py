@@ -33,10 +33,10 @@ testDataDir = "output_prep/"
 outputDir = "output_post/"
 inputDir = "output_infer/"
 
-# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-datasets_name = ["lightfield_DM"]
-# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-dataset_name_readable = ["lightfield with DM commands"]
+datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+# datasets_name = ["lightfield_DM"]
+dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WSFxy and intensity map"]
+# dataset_name_readable = ["lightfield with DM commands"]
 
 
 D = 17.5e-3  # [m]
@@ -76,6 +76,19 @@ for dataset_number in range(dataset_numbers):
             for i in range(tempdata.shape[0]):
                 truths[i,:,:] = myfunctions.pixel_adder(tempdata[i],final_shape=[inferences.shape[1], inferences.shape[2]])
 
+    elif datasets_name[dataset_number] == "lightfield_DM":
+        with h5py.File(inputDir+datasets_name[dataset_number]+"/predictions.h5", 'r') as temp:
+            inferences = temp[list(temp.keys())[0]][()]
+        with h5py.File("dataInputs/ipsf_difflim.h5", 'r') as temp:
+            dx_scaling = temp[list(temp.keys())[0]][()].shape[1]/inferences.shape[1]
+            ipsf_difflim = myfunctions.pixel_adder(temp[list(temp.keys())[0]][()],final_shape=[inferences.shape[1], inferences.shape[2]])
+
+        truths = np.zeros_like(inferences)
+        with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            tempdata = temp[key[0]][()][:]
+            for i in range(tempdata.shape[0]):
+                truths[i,:,:] = myfunctions.pixel_adder(tempdata[i],final_shape=[inferences.shape[1], inferences.shape[2]])
     elif datasets_name[dataset_number] == "lightfield_DM":
         with h5py.File(inputDir+datasets_name[dataset_number]+"/predictions.h5", 'r') as temp:
             inferences = temp[list(temp.keys())[0]][()]
@@ -161,8 +174,8 @@ for dataset_number in range(dataset_numbers):
     fig, (ax, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 2]})
 
     # Top plot: Strehl ratios
-    ax.plot(truths_Strehls, '.k', label=r'$S_{ref}$', markersize=1)
-    ax.plot(inference_Strehls, '.r', label=r'$S_{R}$', markersize=1)
+    ax.plot(truths_Strehls, '.k', label=r'$S_{real}$', markersize=1)
+    ax.plot(inference_Strehls, '.r', label=r'$S_{inf}$', markersize=1)
     ax.set_ylim([0, 1])
     ax.fill_between(range(len(truths_Strehls)), lower_bounds, upper_bounds, 
                     color='gray', alpha=0.3, edgecolor='none', label='±10% of expected Strehl ratio')
@@ -345,8 +358,8 @@ for dataset_number in range(dataset_numbers):
     fig, (ax, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 2]})
 
     # Top plot: EE
-    ax.plot(EE_measured, '.k', label=r'$EE_{R}$', markersize=1)
-    ax.plot(EE_inferred, '.r', label=r'$EE_{ref}$', markersize=1)
+    ax.plot(EE_measured, '.k', label=r'$EE_{real}$', markersize=1)
+    ax.plot(EE_inferred, '.r', label=r'$EE_{inf}$', markersize=1)
     ax.set_ylim([0, 1])
     ax.fill_between(range(len(EE_measured)), lower_bounds, upper_bounds, 
                     color='gray', alpha=0.3, edgecolor='none', label='±10% of expected EE')

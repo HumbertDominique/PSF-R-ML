@@ -45,14 +45,14 @@ testDataDir = "output_prep/"
 outputDir = "output_infer/"
 inputDir = "output_ML/"
 
-# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-datasets_name = ["lightfield_DM"]
-# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-dataset_name_readable = ["lightfield with DM commands"]
-# input_channels = [1, 2, 2, 3, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
-# input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (80, 80)]
-input_channels = [2] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
-input_size = [(270, 270)]
+# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_DM_intensity_otf", "WFSxy_intensity"]
+datasets_name = ["WFSxy_DM_intensity_otf"]
+# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WFSxy with DM and intensity map to OTF","WSFxy and intensity map"]
+dataset_name_readable = ["WFSxy with DM and intensity map to OTF"]
+# input_channels = [1, 2, 2, 3, 4, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+# input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (160, 160), (80, 80)]
+input_channels = [4] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+input_size = [(160, 160)]
 
 batch_size = 128
 
@@ -214,6 +214,7 @@ for dataset_number in range(dataset_numbers):
         del WFSx, WFSy, DM_command, test_data
         x_test = x_test / x_max
         y_test = y_test / y_max
+
     elif datasets_name[dataset_number] == "WFSxy_DM_intensity":
         with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
             key = list(temp.keys())
@@ -240,6 +241,39 @@ for dataset_number in range(dataset_numbers):
         for i in range(test_data.shape[0]):
                 intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
         with h5py.File(testDataDir+"ao_ipsf_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            y_test = temp[key[0]][()][:]
+        x_test = np.stack((WFSx, WFSy, DM_command, intensity_map), axis=1) # stack WFSx and WFSy along the channel dimension
+        del WFSx, WFSy, DM_command, intensity_map, test_data
+        x_test = x_test / x_max
+        y_test = y_test / y_max
+
+    elif datasets_name[dataset_number] == "WFSxy_DM_intensity_otf":
+        with h5py.File(testDataDir+"ao_WFSx"+"_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            WFSx = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+            for i in range(test_data.shape[0]):
+                WFSx[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        with h5py.File(testDataDir+"ao_WFSy"+"_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            WFSy = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+        for i in range(test_data.shape[0]):
+                WFSy[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        with h5py.File(testDataDir+"ao_DM_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            DM_command = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+        for i in range(test_data.shape[0]):
+                DM_command[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        with h5py.File(testDataDir+"ao_intensity_map_test_1.h5", 'r') as temp:
+            key = list(temp.keys())
+            test_data = temp[key[0]][()][:]
+            intensity_map = np.zeros((test_data.shape[0], *input_size[dataset_number]))
+        for i in range(test_data.shape[0]):
+                intensity_map[i] = myfunctions.pixel_adder(test_data[i], final_shape=[input_size[dataset_number][0], input_size[dataset_number][1]])
+        with h5py.File(testDataDir+"ao_iOTF_test_1.h5", 'r') as temp:
             key = list(temp.keys())
             y_test = temp[key[0]][()][:]
         x_test = np.stack((WFSx, WFSy, DM_command, intensity_map), axis=1) # stack WFSx and WFSy along the channel dimension
