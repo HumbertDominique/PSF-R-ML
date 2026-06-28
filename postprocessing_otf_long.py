@@ -98,8 +98,10 @@ for dataset_number in range(dataset_numbers):
         OTF_ipsf_difflim = np.abs(myfunctions.otf_from_psf(padded_ipsf_difflim))
         OTF_tel = myfunctions.telescope_otf(nu_n_grid)
         OTF_aliasing =OTF_ipsf_difflim - OTF_tel
-        OTF_truths[i] = (padded_truth[i] - OTF_aliasing)*FREQ_MASK
-        OTF_inferences[i] = (padded_inferences[i] - OTF_aliasing)*FREQ_MASK
+        # OTF_truths[i] = (padded_truth[i] - OTF_aliasing)*FREQ_MASK
+        # OTF_inferences[i] = (padded_inferences[i] - OTF_aliasing)*FREQ_MASK
+        OTF_truths[i] = padded_truth[i]
+        OTF_inferences[i] = padded_inferences[i]
 
         inference_Strehls[i] = np.sum(OTF_inferences[i]) / np.sum(OTF_tel*FREQ_MASK)
         truths_Strehls[i] = np.sum(OTF_truths[i]) / np.sum(OTF_tel*FREQ_MASK)
