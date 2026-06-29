@@ -187,7 +187,7 @@ for dataset_number in range(dataset_numbers):
     ax.grid()
 
     # Bottom plot: Relative distance (ax2 is now a separate subplot below)
-    ax2.plot(Strehls_rel_fidd * 100, '-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
+    ax2.plot(Strehls_rel_fidd * 100, '-k', label=r"$\frac{S_{real}-S_{inf}}{S_{real}}$",markersize=3)
     ax2.set_ylabel('Relative distance [%]', fontsize=MEDIUM_SIZE, color='k')
     ax2.tick_params(axis='y', labelsize=SMALL_SIZE, colors='k')
     symetric_lim = max(abs(np.min(Strehls_rel_fidd) * 110), abs(np.max(Strehls_rel_fidd) * 110))
