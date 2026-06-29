@@ -333,7 +333,7 @@ for dataset_number in range(dataset_numbers):
     ax.grid()
 
     # Bottom plot: Relative distance (ax2 is now a separate subplot below)
-    ax2.plot(EE_rel_diff * 100, '-k', label=r"$\frac{S_{R}-S_{ref}}{S_{ref}}$",markersize=3)
+    ax2.plot(EE_rel_diff * 100, '-k', label=r"$\frac{EE_{real}-EE_{inf}}{EE_{real}}$",markersize=3)
     ax2.set_ylabel('Relative distance [%]', fontsize=MEDIUM_SIZE, color='k')
     ax2.tick_params(axis='y', labelsize=SMALL_SIZE, colors='k')
     symetric_lim = max(abs(np.min(EE_rel_diff) * 110), abs(np.max(EE_rel_diff) * 110))
