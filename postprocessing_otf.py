@@ -181,15 +181,15 @@ for dataset_number in range(dataset_numbers):
     inferred_FWHM_y = []
     for i in range(psfs_inferred_from_otf.shape[0]):
         FWHM_x, FWHM_y = myfunctions.fwhm_2d(psfs_inferred_from_otf[i])
-        inferred_FWHM_x.append(FWHM_x)
-        inferred_FWHM_y.append(FWHM_y)
+        inferred_FWHM_x.append(dx_scaled*FWHM_x)
+        inferred_FWHM_y.append(dx_scaled*FWHM_y)
 
     measured_FWHM_x = []
     measured_FWHM_y = []
     for i in range(psfs_truth_from_otf.shape[0]):
         FWHM_x, FWHM_y = myfunctions.fwhm_2d(psfs_truth_from_otf[i])
-        measured_FWHM_x.append(FWHM_x)
-        measured_FWHM_y.append(FWHM_y)
+        measured_FWHM_x.append(dx_scaled*FWHM_x)
+        measured_FWHM_y.append(dx_scaled*FWHM_y)
 
     # radial average
     inference_fwhm_r = []
@@ -197,27 +197,27 @@ for dataset_number in range(dataset_numbers):
         rp = myfunctions.radial_average(psfs_inferred_from_otf[i])
         half_max = rp.max() / 2
         idx = np.where(rp >= half_max)[0]
-        inference_fwhm_r.append((idx[-1] - idx[0])*2)
+        inference_fwhm_r.append(dx_scaled*(idx[-1] - idx[0])*2)
     # print(f"FWHM of the inferred PSF: {inference_fwhm_r[0]} pixels")
     measured_fwhm_r = []
     for i in range(psfs_truth_from_otf.shape[0]):
         rp = myfunctions.radial_average(psfs_truth_from_otf[i])
         half_max = rp.max() / 2
         idx = np.where(rp >= half_max)[0]
-        measured_fwhm_r.append((idx[-1] - idx[0])*2)
+        measured_fwhm_r.append(dx_scaled*(idx[-1] - idx[0])*2)
     # print(f"FWHM of the measured PSF: {measured_fwhm_r[0]} pixels")
 
     diff_FWHM_x = np.array(inferred_FWHM_x) - np.array(measured_FWHM_x)
     diff_FWHM_y = np.array(inferred_FWHM_y) - np.array(measured_FWHM_y)
     diff_FWHM_r = np.array(inference_fwhm_r) - np.array(measured_fwhm_r)
-    difflim_FWMH = 1.028 * wl / (D * dx_scaled)
+    difflim_FWMH = 1.028 * wl / (D)
 
     half_max = psfs_inferred_from_otf.max() / 2
     disk_test = psfs_inferred_from_otf > half_max
     half_max_real = psfs_truth_from_otf.max() / 2
     disk_real = psfs_truth_from_otf > half_max_real
 
-    half_figure = 1.5*np.max([measured_FWHM_x[therandom].max(), measured_FWHM_y[therandom].max(), inferred_FWHM_x[therandom].max(), inferred_FWHM_y[therandom].max()])//2
+    half_figure = 1.5*(np.max([measured_FWHM_x[therandom].max(), measured_FWHM_y[therandom].max(), inferred_FWHM_x[therandom].max(), inferred_FWHM_y[therandom].max()])/dx_scaled)//2
 
 
     fig = plt.figure(figsize=(12, 10)) # https://matplotlib.org/3.5.0/tutorials/intermediate/gridspec.html
@@ -239,7 +239,7 @@ for dataset_number in range(dataset_numbers):
     # --- Top-left: title + explanation ---
     ax_text.axis("off")
     ax_text.text(0.45, 1, f"FWHM computation results\nand data for test sample N°{therandom}", ha="center", va="center", fontsize=BIGGER_SIZE)
-    ax_text.text(0.45, 0.25, f"Difference between the inferred and measured FWHMs in\nx, y and the radial average\n The contour of an inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the randomly selected sample inference\nis highlighted in red.\n As reference, the diffraction-limited FWHM is {difflim_FWMH:.2f} pixels.",
+    ax_text.text(0.45, 0.25, f"Difference between the inferred and measured FWHMs in\nx, y and the radial average\n The contour of an inferred\nand measured PSF at the FWHM is shown on the right.\nIn all plots, the randomly selected sample inference\nis highlighted in red.\n As reference, the diffraction-limited FWHM is {difflim_FWMH:.2e} pixels.",
                  ha="center", va="center", fontsize=18)
     # --- Top-right: contour plot ---
     ax_contour.contour(disk_test[therandom], colors='r', linestyles='-')
@@ -261,7 +261,7 @@ for dataset_number in range(dataset_numbers):
 
     ax_avg.plot(iterations, diff_FWHM_r, '.k')
     ax_avg.plot(iterations[therandom], diff_FWHM_r[therandom], 'or')
-    ax_avg.set_ylabel(r'$\Delta_{avg}$ [px]', fontsize=18)
+    ax_avg.set_ylabel(r'$\Delta_{avg}$ [rad]', fontsize=18)
     ax_avg.tick_params(axis='both', labelsize=12)
     ax_avg.grid(True, alpha=0.3)
     ylim = max(abs(np.min(diff_FWHM_r)), abs(np.max(diff_FWHM_r))) * 1.1
@@ -270,7 +270,7 @@ for dataset_number in range(dataset_numbers):
     ax_dy.plot(iterations, diff_FWHM_y, '.k')
     ax_dy.plot(iterations[therandom], diff_FWHM_y[therandom], 'or')
     ax_dy.set_xlabel('iteration', fontsize=18)
-    ax_dy.set_ylabel(r'$\Delta_y$ [px]', fontsize=18)
+    ax_dy.set_ylabel(r'$\Delta_y$ [rad]', fontsize=18)
     ax_dy.tick_params(axis='both', labelsize=12)
     ax_dy.grid(True, alpha=0.3)
     ylim = max(abs(np.min(diff_FWHM_y)), abs(np.max(diff_FWHM_y))) * 1.1
@@ -278,7 +278,7 @@ for dataset_number in range(dataset_numbers):
 
     ax_dx.plot(diff_FWHM_x, iterations, '.k')
     ax_dx.plot(diff_FWHM_x[therandom], iterations[therandom], 'or')
-    ax_dx.set_xlabel(r'$\Delta_x$ [px]', fontsize=18)
+    ax_dx.set_xlabel(r'$\Delta_x$ [rad]', fontsize=18)
     ax_dx.yaxis.set_label_position("right")
     ax_dx.yaxis.tick_right()
     ax_dx.set_ylabel('iteration', fontsize=18)

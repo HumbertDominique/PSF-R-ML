@@ -200,15 +200,15 @@ for dataset_number in range(dataset_numbers):
 
     for i in range(psfs_inferred_from_otf.shape[0]):
         FWHM_x, FWHM_y = myfunctions.fwhm_2d(psfs_inferred_from_otf[i])
-        inferred_FWHM_x.append(FWHM_x)
-        inferred_FWHM_y.append(FWHM_y)
+        inferred_FWHM_x.append(dx_scaled*FWHM_x)
+        inferred_FWHM_y.append(dx_scaled*FWHM_y)
 
     measured_FWHM_x = []
     measured_FWHM_y = []
     for i in range(psfs_truth_from_otf.shape[0]):
         FWHM_x, FWHM_y = myfunctions.fwhm_2d(psfs_truth_from_otf[i])
-        measured_FWHM_x.append(FWHM_x)
-        measured_FWHM_y.append(FWHM_y)
+        measured_FWHM_x.append(dx_scaled*FWHM_x)
+        measured_FWHM_y.append(dx_scaled*FWHM_y)
 
     # radial average
     inference_fwhm_r = []
@@ -223,13 +223,13 @@ for dataset_number in range(dataset_numbers):
         rp = myfunctions.radial_average(psfs_truth_from_otf[i])
         half_max = rp.max() / 2
         idx = np.where(rp >= half_max)[0]
-        measured_fwhm_r.append((idx[-1] - idx[0])*2)
+        measured_fwhm_r.append(dx_scaled*(idx[-1] - idx[0])*2)
     # print(f"FWHM of the measured PSF: {measured_fwhm_r[0]} pixels")
 
     diff_FWHM_x = np.array(inferred_FWHM_x) - np.array(measured_FWHM_x)
     diff_FWHM_y = np.array(inferred_FWHM_y) - np.array(measured_FWHM_y)
     diff_FWHM_r = np.array(inference_fwhm_r) - np.array(measured_fwhm_r)
-    difflim_FWMH = 1.028 * wl / (D * dx_scaled)
+    difflim_FWMH = 1.028 * wl / (D)
 
     x = np.arange(len(exposures))
 
@@ -251,7 +251,7 @@ for dataset_number in range(dataset_numbers):
     # --- Top-left: title + explanation ---
     ax_text.axis("off")
     ax_text.text(0.5, 1, f"FWHM computation results", ha="center", va="center", fontsize=BIGGER_SIZE)
-    ax_text.text(0.5, 0.25, f"Difference between the inferred and measured FWHM in x, y \nand the radial average for each long exposures from the test set.\nThe annotation next to each point indicates the measured FWHM value in pixels.\nAs reference, the diffraction-limited FWHM is {difflim_FWMH:.2f} pixels.",ha="center", va="center", fontsize=18)
+    ax_text.text(0.5, 0.25, f"Difference between the inferred and measured FWHM in x, y \nand the radial average for each long exposures from the test set.\nThe annotation next to each point indicates the measured FWHM value in pixels.\nAs reference, the diffraction-limited FWHM is {difflim_FWMH:.2e} pixels.",ha="center", va="center", fontsize=18)
     # --- Top-right: contour plot ---
 
     # --- bottom plots ---
@@ -259,7 +259,7 @@ for dataset_number in range(dataset_numbers):
     # delta_avg, delta_y, delta_x should be your arrays
 
     ax_avg.plot(x, diff_FWHM_r, '.k')
-    ax_avg.set_ylabel(r'$\Delta_{avg}$ [px]', fontsize=18)
+    ax_avg.set_ylabel(r'$\Delta_{avg}$ [rad]', fontsize=18)
     ax_avg.tick_params(axis='both', labelsize=12)
     # ax_avg.set_yticks(x)
     ax_avg.grid(True, alpha=0.3)
@@ -273,7 +273,7 @@ for dataset_number in range(dataset_numbers):
     ax_dy.plot(x, diff_FWHM_y, '.k')
     ax_dy.set_xticks(x,exposures)
     ax_dy.set_xlabel(f"Integration time [it]", fontsize=18)
-    ax_dy.set_ylabel(r'$\Delta_y$ [px]', fontsize=18)
+    ax_dy.set_ylabel(r'$\Delta_y$ [rad]', fontsize=18)
     ax_dy.tick_params(axis='both', labelsize=12)
     ax_dy.grid(True, alpha=0.3)
     ylim = max(abs(np.min(diff_FWHM_y)), abs(np.max(diff_FWHM_y)), .909) * 1.1
@@ -284,7 +284,7 @@ for dataset_number in range(dataset_numbers):
                    ha='left', va='bottom', fontsize=12)
 
     ax_dx.plot(diff_FWHM_x, x, '.k')
-    ax_dx.set_xlabel(r'$\Delta_x$ [px]', fontsize=18)
+    ax_dx.set_xlabel(r'$\Delta_x$ [rad]', fontsize=18)
     ax_dx.yaxis.set_label_position("right")
     ax_dx.set_yticks(x,exposures)
     ax_dx.yaxis.tick_right()
