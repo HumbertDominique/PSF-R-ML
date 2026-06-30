@@ -130,9 +130,12 @@ for dataset_number in range(dataset_numbers):
 
         plt.savefig(outputDir + datasets_name[dataset_number]+"_long"+f"/{datasets_name[dataset_number]}_OTF{exposure}.png")
 
-        psfs_inferred_from_otf[i] = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(OTF_inferences[i], axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
-        psfs_truth_from_otf[i] = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(OTF_truths[i], axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
-
+        # psfs_inferred_from_otf[i] = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(OTF_inferences[i], axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
+        # psfs_truth_from_otf[i] = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(OTF_truths[i], axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
+        otf = OTF_inferences#myfunctions.otf_from_psf(padded_inferences)
+        psfs_inferred_from_otf[i] = myfunctions.otf_to_psf(otf[i],padded_ipsf_difflim.sum())
+        otf_real = OTF_truths#myfunctions.otf_from_psf(padded_truth)
+        psfs_truth_from_otf[i] = myfunctions.otf_to_psf(otf_real[i],padded_ipsf_difflim.sum())
 
     truths_Strehls = np.asarray(truths_Strehls)
     inference_Strehls = np.asarray(inference_Strehls)

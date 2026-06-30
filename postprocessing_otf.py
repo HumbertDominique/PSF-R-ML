@@ -92,10 +92,10 @@ for dataset_number in range(dataset_numbers):
     OTF_ipsf_difflim = np.abs(myfunctions.otf_from_psf(padded_ipsf_difflim))
     OTF_tel = myfunctions.telescope_otf(nu_n_grid)
     OTF_aliasing = OTF_ipsf_difflim - OTF_tel
-    OTF_truths = (truths[...,:,:] - OTF_aliasing)*FREQ_MASK
-    # OTF_truths = truths[...,:,:]
-    OTF_inferences = (inferences[...,:,:] - OTF_aliasing)*FREQ_MASK
-    # OTF_inferences = inferences[...,:,:]
+    # OTF_truths = (truths[...,:,:] - OTF_aliasing)*FREQ_MASK
+    OTF_truths = truths[...,:,:]
+    # OTF_inferences = (inferences[...,:,:] - OTF_aliasing)*FREQ_MASK
+    OTF_inferences = inferences[...,:,:]
 
     inference_Strehls = np.sum(OTF_inferences, axis=(-2, -1)) / np.sum(OTF_tel*FREQ_MASK)
     truths_Strehls = np.sum(OTF_truths, axis=(-2, -1)) / np.sum(OTF_tel*FREQ_MASK)
@@ -170,10 +170,12 @@ for dataset_number in range(dataset_numbers):
     # FWMH
 
     otf = OTF_inferences#myfunctions.otf_from_psf(padded_inferences)
-    psfs_inferred_from_otf = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(otf, axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2#myfunctions.otf_to_psf(otf,padded_inferences[...,:,:].sum())
-
+    psfs_inferred_from_otf = myfunctions.otf_to_psf(otf,padded_ipsf_difflim.sum())
+    # psfs_inferred_from_otf = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(otf, axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
     otf_real = OTF_truths#myfunctions.otf_from_psf(padded_truth)
-    psfs_truth_from_otf = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(otf_real, axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2#myfunctions.otf_to_psf(otf_real,padded_truth[...,:,:].sum())
+    psfs_truth_from_otf = myfunctions.otf_to_psf(otf_real,padded_ipsf_difflim.sum())
+    # psfs_truth_from_otf = ((np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(otf_real, axes=(-2, -1)), axes=(-2, -1)), axes=(-2, -1))).real)**2
+
     print("Data transformed from OTF to PSF.")
     inferred_FWHM_x = []
     inferred_FWHM_y = []
