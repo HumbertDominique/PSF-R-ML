@@ -384,7 +384,7 @@ for dataset_number in range(dataset_numbers):
     plt.hlines(y=val_loss[-1], xmin=0, xmax=test_losses.shape[0], colors='b', linestyles='--', label="Final validation MSE")
     plt.text(x=test_losses.shape[0]//2, y=val_loss[-1]*1.1, s=f"{myfunctions.eng_notation(val_loss[-1],1)}", color='b', fontsize=SMALL_SIZE)
 
-    plt.title(dataset_name_readable[dataset_number] + "\nTest MSE", fontsize=BIGGER_SIZE)
+    plt.title(dataset_name_readable[dataset_number] + ": Test MSE", fontsize=BIGGER_SIZE)
     plt.xlabel(f"Test batch number (batch size = {batch_size})", fontsize=SMALL_SIZE)
     plt.ylabel("MSE", fontsize=SMALL_SIZE)
     plt.xticks(fontsize=SMALL_SIZE*.8)
