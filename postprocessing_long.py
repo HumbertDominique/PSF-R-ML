@@ -28,10 +28,10 @@ inputDir = "output_infer/"
 exposures = [10, 100, 1000, 5000]
 # exposures = [10, 100]
 
-datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-# datasets_name = ["lightfield_DM"]
-dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-# dataset_name_readable = ["lightfield with DM commands", "WFSxy"]
+# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+datasets_name = ["WFSxy"]
+# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
+dataset_name_readable = ["WFSxy"]
 
 
 D = 17.5e-3  # [m]
@@ -174,6 +174,9 @@ for dataset_number in range(dataset_numbers):
 
     truth_errors = truths_Strehls * 0.10
 
+    print(f"Strehl ratios for {datasets_name[dataset_number]} dataset:")
+    for i, exposure in enumerate(exposures):
+        print(f"Exposure: {exposure} iterations, Measured Strehl: {truths_Strehls[i]:.4e}, Inferred Strehl: {inference_Strehls[i]:.4e}")
 
     x = np.arange(len(exposures))
     truth_errors = truths_Strehls * 0.10
@@ -216,7 +219,7 @@ for dataset_number in range(dataset_numbers):
         rp = myfunctions.radial_average(psfs_inferred_from_otf[i])
         half_max = rp.max() / 2
         idx = np.where(rp >= half_max)[0]
-        inference_fwhm_r.append((idx[-1] - idx[0])*2)
+        inference_fwhm_r.append(dx_scaled*(idx[-1] - idx[0])*2)
     # print(f"FWHM of the inferred PSF: {inference_fwhm_r[0]} pixels")
     measured_fwhm_r = []
     for i in range(psfs_truth_from_otf.shape[0]):
@@ -230,6 +233,12 @@ for dataset_number in range(dataset_numbers):
     diff_FWHM_y = np.array(inferred_FWHM_y) - np.array(measured_FWHM_y)
     diff_FWHM_r = np.array(inference_fwhm_r) - np.array(measured_fwhm_r)
     difflim_FWMH = 1.028 * wl / (D)
+
+    print(f"FWHM of the diffraction-limited PSF: {difflim_FWMH:.2e} pixels")
+    print(f"FWHM_r for {datasets_name[dataset_number]} dataset:")
+    for i, exposure in enumerate(exposures):
+        print(f"Exposure: {exposure} iterations, Measured FWHM_r: {measured_fwhm_r[i]:.4e}, Inferred FWHM_r: {inference_fwhm_r[i]:.4e}")
+
 
     x = np.arange(len(exposures))
 
@@ -263,7 +272,7 @@ for dataset_number in range(dataset_numbers):
     ax_avg.tick_params(axis='both', labelsize=12)
     # ax_avg.set_yticks(x)
     ax_avg.grid(True, alpha=0.3)
-    ylim = max(abs(np.min(diff_FWHM_r)), abs(np.max(diff_FWHM_r)), .909) * 1.1
+    ylim = max(abs(np.min(diff_FWHM_r)), abs(np.max(diff_FWHM_r)), dx_scaled) * 1.1
     ax_avg.set_ylim([-ylim, ylim])
     for i, val in enumerate(measured_fwhm_r):
         ax_avg.annotate(f"{val:.0f}", (x[i], diff_FWHM_r[i]),
@@ -276,7 +285,7 @@ for dataset_number in range(dataset_numbers):
     ax_dy.set_ylabel(r'$\Delta_y$ [rad]', fontsize=18)
     ax_dy.tick_params(axis='both', labelsize=12)
     ax_dy.grid(True, alpha=0.3)
-    ylim = max(abs(np.min(diff_FWHM_y)), abs(np.max(diff_FWHM_y)), .909) * 1.1
+    ylim = max(abs(np.min(diff_FWHM_y)), abs(np.max(diff_FWHM_y)), dx_scaled) * 1.1
     ax_dy.set_ylim([-ylim, ylim])
     for i, val in enumerate(measured_FWHM_y):
         ax_dy.annotate(f"{val:.0f}", (x[i], diff_FWHM_y[i]),
@@ -291,7 +300,7 @@ for dataset_number in range(dataset_numbers):
     ax_dx.set_ylabel(f"Integration time [it]", fontsize=18)
     ax_dx.tick_params(axis='both', labelsize=12)
     ax_dx.grid(True, alpha=0.3)
-    xlim = max(abs(np.min(diff_FWHM_x)), abs(np.max(diff_FWHM_x)), .909) * 1.1
+    xlim = max(abs(np.min(diff_FWHM_x)), abs(np.max(diff_FWHM_x)), dx_scaled) * 1.1
     ax_dx.set_xlim([-xlim, xlim])
     for i, val in enumerate(measured_FWHM_x):
         ax_dx.annotate(f"{val:.0f}", (diff_FWHM_x[i], x[i]),
@@ -321,6 +330,12 @@ for dataset_number in range(dataset_numbers):
     EE_measured = np.sum(AIRY_MASK*norm_psfs_truth_from_otf,axis=(-2, -1))
     EE_diff = EE_measured - EE_inferred
     EE_rel_diff = EE_diff/EE_measured
+
+
+    print(f"EE within the 1st Airy disc for {datasets_name[dataset_number]} dataset:")
+    for i, exposure in enumerate(exposures):
+        print(f"Exposure: {exposure} iterations, Measured EE: {EE_measured[i]:.4e}, Inferred EE: {EE_inferred[i]:.4e}")
+
 
     x = np.arange(len(exposures))
 
