@@ -28,10 +28,10 @@ inputDir = "output_infer/"
 exposures = [10, 100, 1000, 5000]
 # exposures = [10, 100]
 
-# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-datasets_name = ["WFSxy"]
-# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map","WSFxy and intensity map"]
-dataset_name_readable = ["WFSxy"]
+datasets_name = ["WFSxy", "WFSxy_DM", "WFSxy_intensity", "WFSxy_DM_intensity", "lightfield", "lightfield_DM"]
+# datasets_name = ["WFSxy"]
+dataset_name_readable = ["WFSxy", "WFSxy with DM commands","WSFxy and intensity map", "WFSxy with DM and intensity map", "lightfield", "lightfield with DM commands"]
+# dataset_name_readable = ["WFSxy"]
 
 
 D = 17.5e-3  # [m]
@@ -51,6 +51,7 @@ dataset_numbers = len(datasets_name)
 
 for dataset_number in range(dataset_numbers):
     plt.close('all')
+    print("--------------------------------------------------")
     print(f"Processing dataset: {datasets_name[dataset_number]} ({dataset_number+1}/{dataset_numbers})")
     print(f"Loading data for dataset: {datasets_name[dataset_number]}")
     if datasets_name[dataset_number] == "lightfield":
