@@ -1,5 +1,5 @@
 """
-This file is a almost a copy-paste form my 2026 PA "Astronomical Adaptive Optics Point Spread Function Reconstruction with Machine Learning Algorithms" (HES-SO master, 1001, Lausanne) with some minor adjustments to make it work with pytorch.
+This file is a rewrite of 2026 PA "Astronomical Adaptive Optics Point Spread Function Reconstruction with Machine Learning Algorithms" (HES-SO master, 1001, Lausanne) with some minor adjustments to make it work with pytorch.
 """
 
 import torch

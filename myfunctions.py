@@ -157,6 +157,10 @@ def otf_to_psf(otf, psf_sum):
 def fwhm_1D(profile):
     """----------------------------------------------------
     Find FWHM for 1D profile: count of pixels >= half_max
+    inputs:
+        profile (ndarray): 1D array representing the profile
+    output:
+        fwhm (int): Full Width at Half Maximum (FWHM) in index units
     ----------------------------------------------------"""
     above_half = np.where(profile >= profile.max()/2)[0]
     if len(above_half) == 0:
@@ -166,6 +170,11 @@ def fwhm_1D(profile):
 def fwhm_2d(img):
     """----------------------------------------------------
     Measure FWHM directly on 2D PSF image without fitting.
+    inputs:
+        img (ndarray): 2D array representing the PSF image
+    output:
+        fwhmx (int): Full Width at Half Maximum (FWHM) in index units for the x-axis
+        fwhmy (int): Full Width at Half Maximum (FWHM) in index units for the y-axis
     ----------------------------------------------------"""
     y_c, x_c = np.unravel_index(np.argmax(img, axis=None), img.shape) # https://numpy.org/doc/2.2/reference/generated/numpy.argmax.html
 
@@ -179,6 +188,14 @@ def fwhm_2d(img):
 
 
 def radial_average(psf, center=None):
+    """
+    Computes the radial average of a 2D PSF image around a center point. If no center is provided, it defaults to the peak of the image.
+    inputs:
+        psf (ndarray): 2D array representing the PSF image
+        center (tuple): Optional (y, x) coordinates for the center of the PSF. If None, the peak is used.
+    output:
+        radial_profile (ndarray): 1D array representing the radial average of the PSF
+    """
     if center is None:
         center = np.unravel_index(np.argmax(psf), psf.shape)
 

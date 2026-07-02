@@ -58,6 +58,9 @@ print(torch.cuda.is_available())
 print("------------- Loading data -------------")
 
 ### ----- PASTE DATA LOADING CODE HEREUNDER -----
+### ----- PASTE DATA LOADING CODE HEREUNDER -----
+### ----- PASTE DATA LOADING CODE HEREUNDER -----
+
 image_size = (160, 160)
 
 WFS_x = np.zeros((35000, *image_size)) # *tuple expands the tuple into separate arguments. Very nice and to be remembered
@@ -153,6 +156,8 @@ with open(outputDir + "max_val.txt", "w") as f:
 
 
 
+### ----- PASTE DATA LOADING CODE HEREABOVE -----
+### ----- PASTE DATA LOADING CODE HEREABOVE -----
 ### ----- PASTE DATA LOADING CODE HEREABOVE -----
 
 print("------------- Data Loaded -------------")
