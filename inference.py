@@ -50,8 +50,8 @@ datasets_name = ["WFSxy_DM_intensity_otf"]
 # dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WFSxy with DM and intensity map to OTF","WSFxy and intensity map"]
 dataset_name_readable = ["WFSxy with DM and intensity map to OTF"]
 # input_channels = [1, 2, 2, 3, 4, 4, 3] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
-# input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (160, 160), (80, 80)]
 input_channels = [4] # number of channels in the input data. For example, WFSxy has 2 channels (WFSx and WFSy) while lightfield has only 1 channel (lightfield image)
+# input_size = [(270, 270), (270, 270), (80, 80), (80, 80), (80, 80), (160, 160), (80, 80)]
 input_size = [(160, 160)]
 
 batch_size = 128
