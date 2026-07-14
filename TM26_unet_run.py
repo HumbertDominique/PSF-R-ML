@@ -27,7 +27,7 @@ inputDir = "output_prep/"
 history_path = outputDir + "/history.h5"
 weight_path = outputDir+"{}_weights.best.pth".format("cxr_reg")
 
-max_batch_size = 258
+max_batch_size = 128
 LR_factor_on_plateau = 0.1
 epoch_patience = 5
 loss_threshold = 1e-6
@@ -37,7 +37,7 @@ cooldown = 0
 
 
 
-num_epochs = 100
+num_epochs = 1
 early_stopping_patience = 20
 best_val_loss = np.inf
 epochs_no_improve = 0
@@ -61,86 +61,68 @@ print("------------- Loading data -------------")
 ### ----- PASTE DATA LOADING CODE HEREUNDER -----
 ### ----- PASTE DATA LOADING CODE HEREUNDER -----
 
-image_size = (160, 160)
-
-WFS_x = np.zeros((35000, *image_size)) # *tuple expands the tuple into separate arguments. Very nice and to be remembered
-WFS_y = np.zeros((35000, *image_size))
+image_size = (270, 270)
 DM = np.zeros((35000, *image_size))
-intensity = np.zeros((35000, *image_size))
-with h5py.File(inputDir+"ao_WFSx_train_1.h5", 'r') as temp:
+with h5py.File(inputDir+"ao_lightfield_train_1.h5", 'r') as temp:
     key = list(temp.keys())
-    tempData = temp[key[0]][()][:]
-    # print(tempData[0].shape)
-    for i in range(tempData.shape[0]):
-        WFS_x[i] = myfunctions.pixel_adder(tempData[i], final_shape= [image_size[0], image_size[1]])
-with h5py.File(inputDir+"ao_WFSy_train_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    tempData = temp[key[0]][()][:]
-    for i in range(tempData.shape[0]):
-        WFS_y[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
+    # print(key)
+    x_train = temp[key[0]][()]
+    x_max = x_train.max()
 with h5py.File(inputDir+"ao_DM_train_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     for i in range(tempData.shape[0]):
-        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
-with h5py.File(inputDir+"ao_intensity_map_train_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    tempData = temp[key[0]][()]
-    for i in range(tempData.shape[0]):
-        intensity[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
+        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0],image_size[1]])
 
-x_train = np.stack((WFS_x, WFS_y, DM, intensity), axis=1)
-del WFS_x, WFS_y, DM, intensity
+x_train = np.stack((x_train/x_max, DM), axis=1)
+del DM
 
-
-WFS_x = np.zeros((10000, *image_size)) # *tuple expands the tuple into separate arguments. Very nice and to be remembered
-WFS_y = np.zeros((10000, *image_size))
 DM = np.zeros((10000, *image_size))
-intensity = np.zeros((10000, *image_size))
-with h5py.File(inputDir+"ao_WFSx_val_1.h5", 'r') as temp:
+
+with h5py.File(inputDir+"ao_lightfield_val_1.h5", 'r') as temp:
     key = list(temp.keys())
-    tempData = temp[key[0]][()]
-    for i in range(tempData.shape[0]):
-        WFS_x[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
-with h5py.File(inputDir+"ao_WFSy_val_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    tempData = temp[key[0]][()]
-    for i in range(tempData.shape[0]):
-        WFS_y[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
+    x_val = temp[key[0]][()]
 with h5py.File(inputDir+"ao_DM_val_1.h5", 'r') as temp:
     key = list(temp.keys())
     tempData = temp[key[0]][()][:]
     for i in range(tempData.shape[0]):
-        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
-with h5py.File(inputDir+"ao_intensity_map_val_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    tempData = temp[key[0]][()][:]
-    for i in range(tempData.shape[0]):
-        intensity[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0], image_size[1]])
-x_val = np.stack((WFS_x, WFS_y, DM, intensity), axis=1)
-del WFS_x, WFS_y, DM, intensity
+        DM[i] = myfunctions.pixel_adder(tempData[i], final_shape = [image_size[0],image_size[1]])
 
-with h5py.File(inputDir+"ao_iOTF_train_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    y_train = temp[key[0]][()][:]
-with h5py.File(inputDir+"ao_iOTF_val_1.h5", 'r') as temp:
-    key = list(temp.keys())
-    y_val = temp[key[0]][()][:]
+x_val = np.stack((x_val/x_max, DM), axis=1)
+del DM
 
 
 print(f"x_train shape: {x_train.shape}")
-print(f"y_train shape: {y_train.shape}")
 print(f"x_val shape: {x_val.shape}")
+
+with h5py.File(inputDir+"ao_ipsf_train_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()][:]
+    y_train = np.zeros((tempData.shape[0], 270, 270))
+    for i in range(tempData.shape[0]):
+        y_train[i] = myfunctions.pixel_adder(tempData[i], final_shape=[image_size[0],image_size[1]])
+with h5py.File(inputDir+"ao_ipsf_val_1.h5", 'r') as temp:
+    key = list(temp.keys())
+    tempData = temp[key[0]][()][:]
+    y_val = np.zeros((tempData.shape[0], 270, 270))
+    for i in range(tempData.shape[0]):
+        y_val[i] = myfunctions.pixel_adder(tempData[i], final_shape=[image_size[0],image_size[1]])
+
+print(f"y_train shape: {y_train.shape}")
 print(f"y_val shape: {y_val.shape}")
 
+
+
 device = torch.device("cuda:0" if GPU and torch.cuda.is_available() else "cpu")
-model = unet.build_unet(input_shape=(*image_size, 4), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx, WFSy and intensity
+model = unet.build_unet(input_shape=(*image_size, 2), n_channels_out=1).to(device) # input shape is (width, height, channel) where channel is WFSx and WFSy
 
 if torch.cuda.device_count() > 1 and MULTIGPU:
     model = torch.nn.DataParallel(model)
 
-x_train_tens = torch.tensor(x_train, dtype=torch.float32)/x_train.max()
-x_val_tens = torch.tensor(x_val, dtype=torch.float32)/x_train.max()
+
+# IN this case, the normalisation is done only on the lighfield. DM data is already between -1 and 1. Doing (DM-DM.min())/DM.max() does not seem to be necessary
+x_train_tens = torch.tensor(x_train, dtype=torch.float32)
+x_val_tens = torch.tensor(x_val, dtype=torch.float32)
 y_train_tens = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)/y_train.max()
 y_val_tens = torch.tensor(y_val, dtype=torch.float32).unsqueeze(1)/y_train.max()
 
@@ -152,7 +134,6 @@ print(f"y_val_tens shape {y_val_tens.shape}")
 with open(outputDir + "max_val.txt", "w") as f:
     f.write(f"x_train.max(), {x_train.max()}\n")
     f.write(f"y_train.max(), {y_train.max()}\n")
-
 
 
 
