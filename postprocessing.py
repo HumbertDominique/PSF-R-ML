@@ -14,7 +14,6 @@ from matplotlib.gridspec import GridSpec
 import os
 import myfunctions
 import h5py
-import TM26_unet as unet
 
 
 GPU = True
