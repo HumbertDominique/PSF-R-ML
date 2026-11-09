@@ -32,10 +32,10 @@ testDataDir = "output_prep/"
 outputDir = "output_post/"
 inputDir = "output_infer/"
 
-datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
-# datasets_name = ["WFSxy_DM"]
-dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WSFxy and intensity map"]
-# dataset_name_readable = ["WFSxy with DM commands"]
+# datasets_name = ["lightfield", "lightfield_DM", "WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+datasets_name = ["WFSxy", "WFSxy_DM", "WFSxy_DM_intensity", "WFSxy_intensity"]
+# dataset_name_readable = ["lightfield", "lightfield with DM commands", "WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WSFxy and intensity map"]
+dataset_name_readable = ["WFSxy", "WFSxy with DM commands", "WFSxy with DM and intensity map", "WSFxy and intensity map"]
 
 
 D = 17.5e-3  # [m]

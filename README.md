@@ -32,7 +32,7 @@ PA25_ML.ipynb|Jupyter notebook used for training _PA\_25\_unet.py_ on data in PA
 
 ## Statistics-only postprocessing
 
-Four additional scripts compute numerical statistics instead of generating plots. These are rewritten alternatives to the original postprocessing scripts, not modifications of them. The original scripts remain unchanged.
+Four additional scripts compute numerical statistics instead of generating plots. These are rewritten alternatives to the original postprocessing scripts, not modifications of them.
 
 ### Files
 
@@ -43,8 +43,6 @@ Four additional scripts compute numerical statistics instead of generating plots
 | `postprocessing_otf_stats.py` | Statistics for instantaneous OTF predictions |
 | `postprocessing_otf_long_stats.py` | Statistics for long-exposure OTF predictions |
 | `postprocessing_statistics_common.py` | Shared data loading, metric computation, and statistical analysis |
-
-Place all five files in the repository root, beside `myfunctions.py`. They use the existing project dependencies, including NumPy, h5py, and pandas. No GPU is required.
 
 ### Usage
 
@@ -124,23 +122,3 @@ Outputs are saved under `output_stats/<dataset>_instant/` or `output_stats/<data
 | `per_sample_metrics.csv` | Metric values and paired errors for each frame or exposure window |
 | `summary_statistics.csv` | Aggregated statistics, including standard deviation |
 | `settings.json` | Processing parameters, error convention, and skipped exposure lengths |
-
-### Differences from the original scripts
-
-These scripts are not guaranteed to reproduce every original output numerically:
-
-- Long-exposure OTF processing averages the frames in each window. The original `postprocessing_otf_long.py` selects an indexed frame after slicing the exposure.
-- Ordinary encircled-energy fraction is exported as `ee_airy_fraction`. The additional multiplication by Strehl used in the original OTF scripts is exported separately as `ee_times_strehl`.
-- Errors consistently use `prediction - ground_truth`; some original plots use the opposite sign.
-- PSF processing retains the original alias-correction conventions and pixel-based FWHM estimators. Instantaneous and long-exposure PSF processing retain their original differences in the PSF used for FWHM and encircled-energy evaluation.
-- Negative PSF values are not clipped, and the Airy mask is centered on the array rather than recentered on each peak.
-
-PSF predictions are assumed to be normalized already; PSF ground truth is divided by the saved training maximum. OTF arrays are used as stored by default. Use `--otf-truth-scale` and `--otf-prediction-scale` if different scaling is required.
-
-See `README_statistics.md` for additional implementation details and assumptions.
-
-### Validation status
-
-The generated scripts passed Python syntax checks and in-memory checks for standard deviation, single-observation handling, nonfinite-value filtering, zero-denominator handling, and synthetic PSF metrics.
-
-Full HDF5 end-to-end testing and validation against production inference data have not been performed. Test locally and compare results with the original processing pipeline before using the statistics in scientific reporting.
