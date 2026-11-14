@@ -12,7 +12,8 @@ __pycache__/
 #virtual environment
 venv
 .venv
-
+venv312
+.venv312
 #data file
 **/*.h5
 **/*.png

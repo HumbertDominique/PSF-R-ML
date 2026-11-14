@@ -49,6 +49,37 @@ def select_plots(tokens):
     return selected
 
 
+
+def print_dataset_summary(dataset, exposure, group, ddof):
+    row = dict(inputs=dataset, exposure_frames=exposure,
+               exposure_count=len(group), ddof=ddof)
+    lines = [f"\nDataset: {dataset} | {exposure} frame(s)/exposure | "
+             f"{len(group)} exposures | ddof={ddof}"]
+    for title, metric, unit in (("Strehl", "strehl", ""),
+                                ("EE", "ee_airy_fraction", ""),
+                                ("FWHM radial", "fwhm_radial_rad", " rad")):
+        truth_key, pred_key = metric + "_truth", metric + "_prediction"
+        truth = (pd.to_numeric(group[truth_key], errors="coerce").to_numpy(float)
+                 if truth_key in group else np.full(len(group), np.nan))
+        prediction = (pd.to_numeric(group[pred_key], errors="coerce").to_numpy(float)
+                      if pred_key in group else np.full(len(group), np.nan))
+        finite_truth = truth[np.isfinite(truth)]
+        truth_mean = float(finite_truth.mean()) if finite_truth.size else np.nan
+        paired = np.isfinite(truth) & np.isfinite(prediction)
+        with np.errstate(over="ignore", invalid="ignore"):
+            errors = prediction[paired] - truth[paired]
+        errors = errors[np.isfinite(errors)]
+        error_std = float(errors.std(ddof=ddof)) if errors.size > ddof else np.nan
+        row[metric + "_truth_mean"] = truth_mean
+        row[metric + "_error_std"] = error_std
+        row[metric + "_truth_finite_count"] = len(finite_truth)
+        row[metric + "_error_finite_count"] = len(errors)
+        lines.append(f"  {title} truth mean: {truth_mean:.8g}{unit} (n={len(finite_truth)})")
+        lines.append(f"  {title} prediction-error std. dev.: {error_std:.8g}{unit} (n={len(errors)})")
+    print("\n".join(lines), flush=True)
+    return row
+
+
 def process_file(path, args):
     df = pd.read_csv(path)
     if df.empty:
@@ -64,6 +95,7 @@ def process_file(path, args):
     groups = df.groupby(["dataset", "exposure_frames"], sort=True)
     multi = df.dataset.nunique() > 1
     manifest = []
+    table = []
     pngs = csvs = 0
     with tqdm(total=len(groups) * len(columns), desc=path.parent.name, unit="distribution",
               position=1, leave=False, dynamic_ncols=True, disable=args.no_progress) as progress:
@@ -131,6 +163,8 @@ def process_file(path, args):
                                      ddof=args.ddof, figure=figure,
                                      bins_csv=str((folder / f"{stem}_bins.csv").relative_to(root))))
                 progress.update(1)
+            table.append(print_dataset_summary(dataset, exposure, group, args.ddof))
+    pd.DataFrame(table).to_csv(root / "table_summary.csv", index=False)
     pd.DataFrame(manifest).to_csv(root / "histogram_manifest.csv", index=False)
     tqdm.write(f"{path.parent}: saved {pngs} PNGs and {csvs} histogram CSVs")
     return pngs, csvs
