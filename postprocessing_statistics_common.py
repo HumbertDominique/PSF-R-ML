@@ -21,6 +21,8 @@ def first_dataset(f):
 
 
 def image(a):
+    if np.iscomplexobj(a):
+        raise ValueError('Complex inputs are not supported by this real-array workflow; do not discard phase silently')
     a = np.asarray(a, dtype=np.float64)
     if a.ndim == 3 and a.shape[0] == 1:
         a = a[0]
@@ -75,30 +77,35 @@ def context(ref, shape, kind, args):
         ref = mf.pad_center(ref, args.pad)
         if ref.shape != shape:
             raise ValueError(f'OTF shape {shape} does not match padded reference {ref.shape}')
+    flux = float(ref.sum())
+    if flux <= args.epsilon or ref.max() <= 0:
+        raise ValueError('Reference PSF must have positive total flux and peak')
     n = ref.shape[0]
-    freq = np.fft.fftshift(np.fft.fftfreq(n, d=spacing))
-    xx, yy = np.meshgrid(freq, freq)
-    nu = np.hypot(xx, yy) / (args.diameter / args.wavelength)
-    tel = mf.telescope_otf(nu)
-    mask = nu < 1
-    alias = np.abs(mf.otf_from_psf(ref)) - tel
     y, x = np.indices(ref.shape)
     airy = np.hypot(x - n//2, y - n//2) < 1.22*args.wavelength/args.diameter/spacing
-    return dict(ref=ref, dx=spacing, tel=tel, mask=mask, alias=alias, airy=airy)
+    return dict(ref=ref, dx=spacing, airy=airy,
+                reference_peak_fraction=float(ref.max()/flux))
+
+
+def strehl_from_psf(psf, c, epsilon):
+    flux = float(psf.sum())
+    if not np.isfinite(flux) or flux <= epsilon:
+        raise ValueError('Evaluated PSF must have positive, non-negligible total flux')
+    return float((psf.max()/flux) / c['reference_peak_fraction'])
 
 
 def metrics(a, kind, c, args):
     if kind == 'psf':
         psf = mf.pad_center(a, args.pad)
-        if abs(psf.sum()) <= args.epsilon:
-            raise ValueError('PSF has zero or near-zero total flux')
-        otf = (np.abs(mf.otf_from_psf(psf)) - c['alias']) * c['mask']
+    elif kind == 'otf':
+        # Preserve the existing centered OTF-to-real-PSF convention.
+        # Missing phase in a real-only training target cannot be recovered here.
+        psf = mf.otf_to_psf(a, c['ref'].sum())
     else:
-        otf = a
-        psf = mf.otf_to_psf(otf, c['ref'].sum())
-    strehl = divide(otf.sum(), (c['tel']*c['mask']).sum(), args.epsilon)
-    if kind == 'psf' and not args.long:
-        psf = mf.otf_to_psf(otf, psf.sum())
+        raise ValueError(f'Unknown input kind: {kind}')
+    if psf.shape != c['ref'].shape or not np.isfinite(psf).all():
+        raise ValueError('Evaluated PSF must match reference shape and contain finite values')
+    strehl = strehl_from_psf(psf, c, args.epsilon)
     fx, fy = mf.fwhm_2d(psf)
     rp = mf.radial_average(psf)
     idx = np.flatnonzero(rp >= rp.max()/2)
@@ -132,6 +139,8 @@ def main(kind='psf', long=False):
     args.long = long
     if min(args.dx,args.diameter,args.wavelength,args.epsilon) <= 0 or args.pad < 1:
         p.error('Optical parameters and epsilon must be positive; pad must be >= 1')
+    if not long and args.exposures != [10,100,1000,5000]:
+        tqdm.write('Instantaneous mode uses exposure=1; use the long_stats entry point for --exposures.')
     exposures = sorted(set(args.exposures)) if long else [1]
     if not exposures or min(exposures) < 1:
         p.error('Exposures must be positive integers')
@@ -210,7 +219,15 @@ def main(kind='psf', long=False):
         write_csv(folder/'per_sample_metrics.csv', records)
         write_csv(folder/'summary_statistics.csv', summary)
         metadata = {k:str(v) if isinstance(v,Path) else v for k,v in vars(args).items()}
-        metadata.update(kind=kind, error_sign='prediction - truth',
+        metadata.update(metric_version='psf_peak_v2',
+                        strehl_definition='max(psf)/sum(psf) divided by max(reference)/sum(reference)',
+                        evaluated_psf='padded input PSF' if kind == 'psf' else 'real inverse FFT of centered input OTF',
+                        reference_sampling='existing pixel_adder resampling for PSF mode; native dx for OTF mode',
+                        ee_center='image center', fwhm_center='PSF peak',
+                        recenter_before_averaging=False, clipping=False,
+                        otf_alias_correction=False, otf_cutoff_mask=False,
+                        effective_exposures=exposures,
+                        kind=kind, error_sign='prediction - truth',
                         windows='non-overlapping, incomplete final window discarded', skipped=skipped)
         (folder/'settings.json').write_text(json.dumps(metadata, indent=2))
         tqdm.write(f'Saved statistics: {folder}')
