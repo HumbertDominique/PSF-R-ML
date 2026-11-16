@@ -49,14 +49,48 @@ def select_plots(tokens):
     return selected
 
 
+
+def print_dataset_summary(dataset, exposure, group, ddof):
+    row = dict(inputs=dataset, exposure_frames=exposure,
+               exposure_count=len(group), ddof=ddof)
+    lines = [f"\nDataset: {dataset} | {exposure} frame(s)/exposure | "
+             f"{len(group)} exposures | ddof={ddof}"]
+    for title, metric, unit in (("Strehl", "strehl", ""),
+                                ("EE", "ee_airy_fraction", ""),
+                                ("FWHM radial", "fwhm_radial_rad", " rad")):
+        truth_key, pred_key = metric + "_truth", metric + "_prediction"
+        truth = (pd.to_numeric(group[truth_key], errors="coerce").to_numpy(float)
+                 if truth_key in group else np.full(len(group), np.nan))
+        prediction = (pd.to_numeric(group[pred_key], errors="coerce").to_numpy(float)
+                      if pred_key in group else np.full(len(group), np.nan))
+        finite_truth = truth[np.isfinite(truth)]
+        finite_prediction = prediction[np.isfinite(prediction)]
+        truth_mean = float(finite_truth.mean()) if finite_truth.size else np.nan
+        prediction_mean = float(finite_prediction.mean()) if finite_prediction.size else np.nan
+        paired = np.isfinite(truth) & np.isfinite(prediction)
+        with np.errstate(over="ignore", invalid="ignore"):
+            errors = prediction[paired] - truth[paired]
+        errors = errors[np.isfinite(errors)]
+        error_mean = errors.mean()
+        error_std = float(errors.std(ddof=ddof)) if errors.size > ddof else np.nan
+        row[metric + "_truth_mean"] = truth_mean
+        row[metric + "_prediction_mean"] = prediction_mean
+        row[metric + "_error_mean"] = error_mean
+        row[metric + "_error_std"] = error_std
+        row[metric + "_truth_finite_count"] = len(finite_truth)
+        row[metric + "_error_finite_count"] = len(errors)
+        lines.append(f"  {title} truth mean: {truth_mean:.8g}{unit} (n={len(finite_truth)})")
+        lines.append(f"  {title} prediction mean: {prediction_mean:.8g}{unit} (n={len(finite_prediction)})")
+        lines.append(f"  {title} prediction-error: {error_mean:.8g}{unit} (n={len(errors)})")
+        lines.append(f"  {title} prediction-error std. dev.: {error_std:.8g}{unit} (n={len(errors)})")
+    print("\n".join(lines), flush=True)
+    return row
+
+
 def process_file(path, args):
     df = pd.read_csv(path)
     if df.empty:
         return 0, 0
-    if args.datasets is not None:
-        df = df[df["dataset"].isin(args.datasets)]
-        if df.empty:
-            return 0, 0
     for c in ("dataset", "exposure_frames"):
         if c not in df or df[c].isna().any():
             raise ValueError(f"Missing column or values: {c}")
@@ -68,7 +102,8 @@ def process_file(path, args):
     groups = df.groupby(["dataset", "exposure_frames"], sort=True)
     multi = df.dataset.nunique() > 1
     manifest = []
-    prediction_averages = []
+    
+    table = []
     pngs = csvs = 0
     with tqdm(total=len(groups) * len(columns), desc=path.parent.name, unit="distribution",
               position=1, leave=False, dynamic_ncols=True, disable=args.no_progress) as progress:
@@ -136,123 +171,9 @@ def process_file(path, args):
                                      ddof=args.ddof, figure=figure,
                                      bins_csv=str((folder / f"{stem}_bins.csv").relative_to(root))))
                 progress.update(1)
-    summary_datasets = df.groupby("dataset", sort=True)
-    for dataset, dataset_group in summary_datasets:
-        truth_strehl = pd.to_numeric(
-            dataset_group.get("strehl_truth"), errors="coerce"
-        ).to_numpy(float)
-        error_strehl = pd.to_numeric(
-            dataset_group.get("strehl_error"), errors="coerce"
-        ).to_numpy(float)
-        truth_ee = pd.to_numeric(
-            dataset_group.get("ee_airy_fraction_truth"), errors="coerce"
-        ).to_numpy(float)
-        error_ee = pd.to_numeric(
-            dataset_group.get("ee_airy_fraction_error"), errors="coerce"
-        ).to_numpy(float)
-        truth_fwhm = pd.to_numeric(
-            dataset_group.get("fwhm_radial_rad_truth"), errors="coerce"
-        ).to_numpy(float)
-        error_fwhm = pd.to_numeric(
-            dataset_group.get("fwhm_radial_rad_error"), errors="coerce"
-        ).to_numpy(float)
-        prediction_strehl = pd.to_numeric(
-            dataset_group.get("strehl_prediction"), errors="coerce"
-        ).to_numpy(float)
-        prediction_ee = pd.to_numeric(
-            dataset_group.get("ee_airy_fraction_prediction"), errors="coerce"
-        ).to_numpy(float)
-        prediction_fwhm = pd.to_numeric(
-            dataset_group.get("fwhm_radial_rad_prediction"), errors="coerce"
-        ).to_numpy(float)
-
-        truth_strehl = truth_strehl[np.isfinite(truth_strehl)]
-        error_strehl = error_strehl[np.isfinite(error_strehl)]
-        truth_ee = truth_ee[np.isfinite(truth_ee)]
-        error_ee = error_ee[np.isfinite(error_ee)]
-        truth_fwhm = truth_fwhm[np.isfinite(truth_fwhm)]
-        error_fwhm = error_fwhm[np.isfinite(error_fwhm)]
-        prediction_strehl = prediction_strehl[np.isfinite(prediction_strehl)]
-        prediction_ee = prediction_ee[np.isfinite(prediction_ee)]
-        prediction_fwhm = prediction_fwhm[np.isfinite(prediction_fwhm)]
-
-        tqdm.write(f"Dataset: {dataset}")
-        tqdm.write(
-            f"  Strehl truth mean: "
-            f"{truth_strehl.mean() if truth_strehl.size else float('nan')} "
-            f"(n={truth_strehl.size})"
-        )
-        tqdm.write(
-            f"  Strehl prediction-error std. dev.: "
-            f"{error_strehl.std(ddof=args.ddof) if error_strehl.size > args.ddof else float('nan')} "
-            f"(n={error_strehl.size})"
-        )
-        tqdm.write(
-            f"  Mean Strehl error: "
-            f"{error_strehl.mean() if error_strehl.size else float('nan')} "
-            f"(n={error_strehl.size})"
-        )
-        tqdm.write(
-            f"  EE truth mean: "
-            f"{truth_ee.mean() if truth_ee.size else float('nan')} "
-            f"(n={truth_ee.size})"
-        )
-        tqdm.write(
-            f"  EE prediction-error std. dev.: "
-            f"{error_ee.std(ddof=args.ddof) if error_ee.size > args.ddof else float('nan')} "
-            f"(n={error_ee.size})"
-        )
-        tqdm.write(
-            f"  Mean EE error: "
-            f"{error_ee.mean() if error_ee.size else float('nan')} "
-            f"(n={error_ee.size})"
-        )
-        tqdm.write(
-            f"  FWHM radial truth mean: "
-            f"{truth_fwhm.mean() if truth_fwhm.size else float('nan')} rad "
-            f"(n={truth_fwhm.size})"
-        )
-        tqdm.write(
-            f"  FWHM radial prediction-error std. dev.: "
-            f"{error_fwhm.std(ddof=args.ddof) if error_fwhm.size > args.ddof else float('nan')} rad "
-            f"(n={error_fwhm.size})"
-        )
-
-        prediction_averages.append(
-            dict(
-                dataset=dataset,
-                strehl=(
-                    prediction_strehl.mean()
-                    if prediction_strehl.size else np.nan
-                ),
-                ee=(
-                    prediction_ee.mean()
-                    if prediction_ee.size else np.nan
-                ),
-                fwhm_radial=(
-                    prediction_fwhm.mean()
-                    if prediction_fwhm.size else np.nan
-                ),
-                mean_strehl_error=(
-                    error_strehl.mean()
-                    if error_strehl.size else np.nan
-                ),
-                mean_ee_error=(
-                    error_ee.mean()
-                    if error_ee.size else np.nan
-                ),
-                n_strehl=prediction_strehl.size,
-                n_ee=prediction_ee.size,
-                n_fwhm_radial=prediction_fwhm.size,
-                n_strehl_error=error_strehl.size,
-                n_ee_error=error_ee.size,
-            )
-        )
-
+            table.append(print_dataset_summary(dataset, exposure, group, args.ddof))
+    pd.DataFrame(table).to_csv(root / "table_summary.csv", index=False)
     pd.DataFrame(manifest).to_csv(root / "histogram_manifest.csv", index=False)
-    pd.DataFrame(prediction_averages).to_csv(
-        root / "prediction_average_metrics.csv", index=False
-    )
     tqdm.write(f"{path.parent}: saved {pngs} PNGs and {csvs} histogram CSVs")
     return pngs, csvs
 
@@ -265,12 +186,6 @@ def main():
     p.add_argument("--bins", type=bin_rule, default=40)
     p.add_argument("--ddof", type=int, choices=[0, 1], default=0)
     p.add_argument("--dpi", type=int, default=180)
-    p.add_argument(
-        "--datasets",
-        nargs="+",
-        default=None,
-        help="Plot only these dataset names; default plots all datasets",
-    )
     p.add_argument("--no-progress", action="store_true")
     args = p.parse_args()
     try:
@@ -279,8 +194,6 @@ def main():
         p.error(str(exc))
     if args.dpi < 1:
         p.error("--dpi must be positive")
-    if args.datasets is not None:
-        args.datasets = set(args.datasets)
     if not args.root.exists():
         p.error(f"Not found: {args.root}")
     files = [args.root] if args.root.is_file() else sorted(args.root.rglob("per_sample_metrics.csv"))
