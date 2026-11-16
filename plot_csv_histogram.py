@@ -32,6 +32,9 @@ def bin_rule(value):
         pass
     raise argparse.ArgumentTypeError("Use a positive integer or supported NumPy bin rule")
 
+def var_of(a, ddof):
+    a = a[np.isfinite(a)]
+    return float(a.var(ddof=ddof)) if a.size > ddof else np.nan
 
 def select_plots(tokens):
     if "none" in tokens:
@@ -55,9 +58,12 @@ def print_dataset_summary(dataset, exposure, group, ddof):
                exposure_count=len(group), ddof=ddof)
     lines = [f"\nDataset: {dataset} | {exposure} frame(s)/exposure | "
              f"{len(group)} exposures | ddof={ddof}"]
+    # for title, metric, unit in (("Strehl", "strehl", ""),
+    #                             ("EE", "ee_airy_fraction", ""),
+    #                             ("FWHM radial", "fwhm_radial_rad", " rad")):
+    
     for title, metric, unit in (("Strehl", "strehl", ""),
-                                ("EE", "ee_airy_fraction", ""),
-                                ("FWHM radial", "fwhm_radial_rad", " rad")):
+                                ("EE", "ee_airy_fraction", "")):
         truth_key, pred_key = metric + "_truth", metric + "_prediction"
         truth = (pd.to_numeric(group[truth_key], errors="coerce").to_numpy(float)
                  if truth_key in group else np.full(len(group), np.nan))
@@ -72,17 +78,23 @@ def print_dataset_summary(dataset, exposure, group, ddof):
             errors = prediction[paired] - truth[paired]
         errors = errors[np.isfinite(errors)]
         error_mean = errors.mean()
+        truth_var = var_of(truth, ddof)
+        prediction_var = var_of(prediction, ddof)
         error_std = float(errors.std(ddof=ddof)) if errors.size > ddof else np.nan
         row[metric + "_truth_mean"] = truth_mean
+        row[metric + "_truth_var"] = truth_var
         row[metric + "_prediction_mean"] = prediction_mean
+        row[metric + "_prediction_var"] = prediction_var
         row[metric + "_error_mean"] = error_mean
         row[metric + "_error_std"] = error_std
         row[metric + "_truth_finite_count"] = len(finite_truth)
         row[metric + "_error_finite_count"] = len(errors)
         lines.append(f"  {title} truth mean: {truth_mean:.8g}{unit} (n={len(finite_truth)})")
+        lines.append(f"  {title} truth variance: {truth_var:.8g}{unit}^2 (n={len(finite_truth)})")
         lines.append(f"  {title} prediction mean: {prediction_mean:.8g}{unit} (n={len(finite_prediction)})")
-        lines.append(f"  {title} prediction-error: {error_mean:.8g}{unit} (n={len(errors)})")
-        lines.append(f"  {title} prediction-error std. dev.: {error_std:.8g}{unit} (n={len(errors)})")
+        lines.append(f"  {title} prediction variance: {prediction_var:.8g}{unit}^2 (n={len(finite_prediction)})")
+        # lines.append(f"  {title} prediction-error: {error_mean:.8g}{unit} (n={len(errors)})")
+        # lines.append(f"  {title} prediction-error std. dev.: {error_std:.8g}{unit} (n={len(errors)})")
     print("\n".join(lines), flush=True)
     return row
 
