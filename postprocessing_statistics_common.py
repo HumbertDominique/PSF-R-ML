@@ -4,6 +4,8 @@
 PSF inputs follow the original PSF postprocessing convention: the padded PSF is
 converted to an absolute real Fourier array, corrected using a reference-derived
 aliasing term, restricted to the telescope cutoff, and integrated for Strehl.
+EE and FWHM are computed on the PSF reconstructed from that dealiased,
+cutoff-masked OTF.
  
 OTF inputs: the Strehl numerator is the volume under the stored OTF after the
 treatment chosen with --otf-correction (default 'alias_mask': subtract the
@@ -192,9 +194,12 @@ def metrics(a, kind, c, args):
             (c['tel'] * c['mask']).sum(),
             args.epsilon,
         )
+        # EE and FWHM use the PSF reconstructed from the dealiased,
+        # cutoff-masked OTF, matching the OTF-input convention.
+        psf_metrics = mf.otf_to_psf(otf, c['ref_sum'])
         ee = divide(
-            psf[c['airy']].sum(),
-            psf.sum(),
+            psf_metrics[c['airy']].sum(),
+            psf_metrics.sum(),
             args.epsilon,
         )
     else:
@@ -214,15 +219,16 @@ def metrics(a, kind, c, args):
         )
         # PSF metrics (FWHM, EE) come from the uncorrected stored OTF,
         # as in the PSF branch where they come from the uncorrected PSF.
-        psf = mf.otf_to_psf(a, c['ref_sum'])
+        psf_metrics = mf.otf_to_psf(a, c['ref_sum'])
         ee = divide(
-            psf[c['airy']].sum(),
-            psf.sum(),
+            psf_metrics[c['airy']].sum(),
+            psf_metrics.sum(),
             args.epsilon,
         )
  
-    fx, fy = mf.fwhm_2d(psf)
-    rp = mf.radial_average(psf)
+    psf_for_geometry = psf_metrics
+    fx, fy = mf.fwhm_2d(psf_for_geometry)
+    rp = mf.radial_average(psf_for_geometry)
     idx = np.flatnonzero(rp >= rp.max() / 2)
     fr = (idx[-1] - idx[0]) * 2 if idx.size else np.nan
  
@@ -233,7 +239,7 @@ def metrics(a, kind, c, args):
         fwhm_radial_rad=fr * c['dx'],
         ee_airy_fraction=ee,
         ee_times_strehl=ee * strehl,
-        negative_pixel_fraction=float(np.mean(psf < 0)),
+        negative_pixel_fraction=float(np.mean(psf_for_geometry < 0)),
     )
  
  
@@ -509,7 +515,7 @@ def main(kind='psf', long=False):
             for key, value in vars(args).items()
         }
         metadata.update(
-            metric_version='otf_alias_v5',
+            metric_version='otf_alias_dealiased_psf_v6',
             strehl_definition=(
                 'sum(corrected OTF) / '
                 'sum(theoretical telescope OTF inside cutoff)'
@@ -523,16 +529,22 @@ def main(kind='psf', long=False):
                 'otf_correction (alias_mask: minus reference alias term, '
                 'then cutoff mask); FWHM/EE use the uncorrected OTF'
             ),
+            psf_input_processing=(
+                'Strehl uses the OTF from the padded PSF after reference-alias '
+                'subtraction and cutoff masking; FWHM/EE use the PSF '
+                'reconstructed from that dealiased, cutoff-masked OTF'
+            ),
             otf_frequency_grid=(
                 'constructed from the actual stored OTF dimensions'
             ),
             psf_metrics=(
-                'padded input PSF in PSF mode; '
-                'real PSF reconstructed from stored OTF in OTF mode'
+                'real PSF reconstructed from the dealiased, cutoff-masked '
+                'OTF in both PSF and OTF modes'
             ),
             ee_definition=(
-                'ee_airy_fraction: fraction of PSF energy within the first '
-                'Airy radius (same for PSF and OTF); '
+                'ee_airy_fraction: fraction of energy of the PSF '
+                'reconstructed from the dealiased, cutoff-masked OTF within '
+                'the first Airy radius (same for PSF and OTF); '
                 'ee_times_strehl = ee_airy_fraction * strehl'
             ),
             recenter_before_averaging=False,
