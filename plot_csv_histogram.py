@@ -78,21 +78,21 @@ def print_dataset_summary(dataset, exposure, group, ddof):
             errors = prediction[paired] - truth[paired]
         errors = errors[np.isfinite(errors)]
         error_mean = errors.mean()
-        truth_var = var_of(truth, ddof)
-        prediction_var = var_of(prediction, ddof)
+        truth_std = float(finite_truth.std(ddof=ddof)) if finite_truth.size > ddof else np.nan
+        prediction_std = float(finite_prediction.std(ddof=ddof)) if finite_prediction.size > ddof else np.nan
         error_std = float(errors.std(ddof=ddof)) if errors.size > ddof else np.nan
         row[metric + "_truth_mean"] = truth_mean
-        row[metric + "_truth_var"] = truth_var
+        row[metric + "_truth_std"] = truth_std
         row[metric + "_prediction_mean"] = prediction_mean
-        row[metric + "_prediction_var"] = prediction_var
+        row[metric + "_prediction_std"] = prediction_std
         row[metric + "_error_mean"] = error_mean
         row[metric + "_error_std"] = error_std
         row[metric + "_truth_finite_count"] = len(finite_truth)
         row[metric + "_error_finite_count"] = len(errors)
         lines.append(f"  {title} truth mean: {truth_mean:.8g}{unit} (n={len(finite_truth)})")
-        lines.append(f"  {title} truth variance: {truth_var:.8g}{unit}^2 (n={len(finite_truth)})")
+        # lines.append(f"  {title} truth std. dev.: {truth_std:.8g}{unit}^2 (n={len(finite_truth)})")
         lines.append(f"  {title} prediction mean: {prediction_mean:.8g}{unit} (n={len(finite_prediction)})")
-        lines.append(f"  {title} prediction variance: {prediction_var:.8g}{unit}^2 (n={len(finite_prediction)})")
+        # lines.append(f"  {title} prediction std. dev.: {prediction_std:.8g}{unit}^2 (n={len(finite_prediction)})")
         # lines.append(f"  {title} prediction-error: {error_mean:.8g}{unit} (n={len(errors)})")
         # lines.append(f"  {title} prediction-error std. dev.: {error_std:.8g}{unit} (n={len(errors)})")
     print("\n".join(lines), flush=True)
